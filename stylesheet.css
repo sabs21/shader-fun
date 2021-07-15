@@ -1,0 +1,10 @@
+* {
+    padding: 0px;
+    margin: 0px;
+}
+#threeDisplay {
+    position: relative;
+    display: block;
+    width: 100%;
+    height: 500px;
+}
