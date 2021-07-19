@@ -1,10 +1,31 @@
 * {
-    padding: 0px;
-    margin: 0px;
+  padding: 0px;
+  margin: 0px;
+  font-family: "Arial Narrow", Arial, sans-serif;
+}
+section {
+  padding: 10px;
 }
 #threeDisplay {
-    position: relative;
-    display: block;
-    width: 100%;
-    height: 500px;
+  position: relative;
+  display: block;
+  width: 100%;
+  height: 500px;
+}
+.function {
+  position: relative;
+  display: block;
+  padding: 10px;
+  margin-bottom: 20px;
+  border-left: 4px solid rgb(100, 180, 255);
+}
+.function h3 {
+  position: relative;
+  display: block;
+  margin-bottom: 8px;
+}
+.function code {
+  white-space: pre;
+  color: grey;
+  font-family: Consolas, sans-serif;
 }

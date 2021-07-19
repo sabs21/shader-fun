@@ -25,9 +25,16 @@ document.addEventListener("DOMContentLoaded", () => {
     );
     camera.position.z = 4;
 
+    // Setup a point light
+    const light = new THREE.DirectionalLight( 0xffffff, 1.0 );
+    light.position.set(-0.3, 1, 0.6);
+    scene.add(light);
+
     // Setup WebGL
     const renderer = new THREE.WebGLRenderer();
     renderer.setSize( displayWidth, displayHeight );
+    renderer.setPixelRatio( window.devicePixelRatio );
+    renderer.shadowMap.enabled = true;
     threeDisplay.appendChild( renderer.domElement );
 
     var currentTime = 0;
@@ -40,11 +47,11 @@ document.addEventListener("DOMContentLoaded", () => {
         currentTime = timestamp/1000; // Current time in seconds.
 
         // Update rotation
-        //monkey.rotation.x += 0.001;
-        monkey.rotation.y += 0.001;
+        monkey.rotation.x += 0.01;
+        monkey.rotation.y += 0.01;
         
         //console.log(monkey);
-        monkey.material.uniforms.time.value = currentTime;
+        //monkey.material.uniforms.time.value = currentTime;
         
         //cube.rotation.x += 0.01;
         //cube.rotation.y += 0.01;
@@ -94,24 +101,50 @@ document.addEventListener("DOMContentLoaded", () => {
     
     // Load the gltf loader along with the monkey model
     //var monkeyMaterial = new THREE.MeshBasicMaterial( { color: 0xb76726 } );
-    var monkeyMaterial = new THREE.ShaderMaterial({
+    /*var monkeyMaterial = new THREE.ShaderMaterial({
         uniforms: {
             time: { value: currentTime },
 		    resolution: { value: new THREE.Vector2(displayWidth, displayHeight) }
         },
         vertexShader: _VS,
         fragmentShader: _FS,
-        //lights: true
-    });
+        lights: {value: true}
+    });*/
+    var monkeyMaterial = new THREE.MeshStandardMaterial({color: 0x5590d5});
     const loader = new GLTFLoader();
-    loader.load( "./monkey.glb", function (gltf) {
-        gltf.scene.traverse( function( child ) {
+    loader.load( "./monkey.glb", function (object) {
+        /*object.scene.traverse( function( child ) {
             if ( child instanceof THREE.Mesh ) {
                 child.material = monkeyMaterial;
             }
-        });
-        scene.add(gltf.scene);
-        monkey = gltf.scene.children[2]; // store the monkey's mesh
+        });*/
+        scene.add(object.scene);
+        monkey = object.scene.children[2]; // store the monkey's mesh
+        object.scene.children[2].material = new THREE.MeshStandardMaterial({color: 0xffddff});
+        object.scene.children[2].material.onBeforeCompile = function ( shader ) {
+            shader.uniforms.time = { value: currentTime };
+            shader.uniforms.resolution = { value: new THREE.Vector2(displayWidth, displayHeight) };
+            
+            /*shader.vertexShader = 'varying vec4 vWorldPosition;\n' + shader.vertexShader;
+            shader.vertexShader = shader.vertexShader.replace(
+              '#include <worldpos_vertex>',
+              `#include <worldpos_vertex>
+              vWorldPosition = modelMatrix * vec4( transformed, 1.0 );`
+            );
+            shader.fragmentShader = 'uniform float time;\nuniform vec3 size;\nuniform vec3 color1;\nuniform vec3 color2;\nvarying vec4 vWorldPosition;\n' + shader.fragmentShader;
+            shader.fragmentShader = shader.fragmentShader.replace(
+              '#include <dithering_fragment>',
+              [
+                '#include <dithering_fragment>',
+                'float gridRatio = sin( time ) * 0.1875 + 0.3125;', // 0.125 .. 0.5
+                'vec3 m = abs( sin( vWorldPosition.xyz * gridRatio ) );',
+                'vec3 gridColor = mix(color1, color2, vWorldPosition.y / size.y);',
+                'gl_FragColor = vec4( mix( gridColor, gl_FragColor.rgb, m.x * m.y * m.z ), diffuseColor.a );'
+              ].join( '\n' )
+            );
+            materialShader = shader;*/
+            console.log(shader);
+          };
 
         attemptToAnimate();
     }, undefined, function (error) {

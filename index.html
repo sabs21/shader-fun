@@ -4,23 +4,51 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width,initial-scale=1">
     <title>Shader Homepage</title>
-    <link rel="stylesheet" href="stylesheet.css" type="text/css">
+    <link rel="stylesheet" href="./stylesheet.css" type="text/css">
 </head>
 <body>
-    <h1>All Shader Attempts</h1>
-    <ul>
-        <li>
-            <a href="./1/index.html">Shader 1 - Triangle</a>
-        </li>
-        <li>
-            <a href="./2/index.html">Shader 2 - Cube</a>
-        </li>
-        <li>
-            <a href="./3/index.html">Shader 3 - Textured Cube</a>
-        </li>
-        <li>
-            <a href="./4/index.html">Shader 4 - Three JS</a>
-        </li>
-    </ul>
+    <section>
+        <h1>All Shader Attempts</h1>
+        <ul>
+            <li>
+                <a href="./1/index.html">Shader 1 - Triangle</a>
+            </li>
+            <li>
+                <a href="./2/index.html">Shader 2 - Cube</a>
+            </li>
+            <li>
+                <a href="./3/index.html">Shader 3 - Textured Cube</a>
+            </li>
+            <li>
+                <a href="./4/index.html">Shader 4 - Three JS</a>
+            </li>
+        </ul>
+    </section>
+    <section>
+        <h1>GLSL Functions</h1>
+        <ul>
+            <li class="function">
+                <h3>Rectangle</h3>
+                <code>float rect(vec2 st, vec2 bottomLeft, vec2 topRight, vec2 offset, float blur) {
+    float rect = smoothstep(bottomLeft.x, bottomLeft.x+blur, st.x);
+    rect *= smoothstep(bottomLeft.y, bottomLeft.y+blur, st.y);
+    rect *= smoothstep(topRight.x+blur, topRight.x, st.x);
+    rect *= smoothstep(topRight.y+blur, topRight.y, st.y);
+    return rect;
+}</code>
+            </li>
+            <li class="function">
+                <h3>Circle</h3>
+                <code>float circle(vec2 st, vec2 center, float size, float blur) {
+    float circ = 0.0;
+    float dist = distance(st, center);
+    if (dist < size) {
+        circ += smoothstep(dist, dist+blur, size);
+    }
+    return circ;
+}</code>
+            </li>
+        </ul>
+    </section>
 </body>
 </html>
