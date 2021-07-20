@@ -5,12 +5,11 @@
     WebGLRenderer
 } from './three.module.js';*/
 import * as THREE from "./three.module.js";
-import { GLTFLoader } from './GLTFLoader.js';
+import { GLTFLoader } from './modules/GLTFLoader.js';
+import { PMREMGenerator } from './modules/PMREMGenerator.js';
+import { RGBELoader } from './modules/RGBELoader.js';
 
 document.addEventListener("DOMContentLoaded", () => {
-    const deg2rad = function (deg) {
-        return deg * Math.PI / 180;
-    }
     // Find the dimensions of the viewport for three JS
     const threeDisplay = document.getElementById("threeDisplay");
     const threeDisplayRect = threeDisplay.getBoundingClientRect();
@@ -35,7 +34,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
     // Setup a point light
     const light = new THREE.DirectionalLight( 0xffffff, 1.0 );
-    light.position.set(-0.3, 1, 0.6);
+    light.position.set(-0.2, 1, -0.6);
     scene.add(light);
 
     // Setup WebGL
@@ -43,39 +42,19 @@ document.addEventListener("DOMContentLoaded", () => {
     renderer.setSize( displayWidth, displayHeight );
     renderer.setPixelRatio( window.devicePixelRatio );
     renderer.shadowMap.enabled = true;
+    renderer.outputEncoding = THREE.sRGBEncoding;
+    renderer.toneMapping = THREE.ACESFilmicToneMapping;
+    renderer.tomeMappingExposure = 1.25;
     threeDisplay.appendChild( renderer.domElement );
 
     var currentTime = 0;
 
     // Setup animate function
+    var centralCylinder = null;
     var helix = null;
-    var cameraRot = 0;
-    const animate = function (timestamp) {
-        requestAnimationFrame(animate);
-        //console.log("Timestamp: ", timestamp);
-        currentTime = timestamp/1000; // Current time in seconds.
-
-        // Update rotation
-        //helix.rotation.x += 0.006;
-        helix.rotation.z += 0.006;
-        //cameraRot += 0.01;
-        //camera.rotation.x = Math.sin(cameraRot);
-        
-        //console.log(monkey);
-        //monkey.material.uniforms.time.value = currentTime;
-        
-        //cube.rotation.x += 0.01;
-        //cube.rotation.y += 0.01;
-
-        renderer.render( scene, camera );
-    };
-
-    // If all the models are loaded, then animate.
-    const attemptToAnimate = function() {
-        if (helix) {
-            animate();
-        }
-    }
+    var innerHelix = null;
+    var innerHelixMaterial = null;
+    //var cameraRot = 0;
 
     // Create the vertex and fragment shaders
     var _VS = `
@@ -121,49 +100,98 @@ document.addEventListener("DOMContentLoaded", () => {
         fragmentShader: _FS,
         lights: {value: true}
     });*/
-    var monkeyMaterial = new THREE.MeshStandardMaterial({color: 0x5590d5});
+    //var monkeyMaterial = new THREE.MeshStandardMaterial({color: 0x5590d5});
     const loader = new GLTFLoader();
-    loader.load( "./spiral_pillar.glb", function (object) {
+    loader.load( "./spiral_pillar_hq.glb", function (object) {
         /*object.scene.traverse( function( child ) {
             if ( child instanceof THREE.Mesh ) {
                 child.material = monkeyMaterial;
             }
         });*/ 
 
-        helix = object.scene.children[1]; // store the object's mesh
-        scene.add(object.scene);
+        const fragmentShaderReplacements = [
+            {
+                from: '#include <common>',
+                to: `
+                #include <common>
+                uniform float time;
+                uniform float resolution;
+                `,
+            },
+            {
+                from: '#include <color_fragment>',
+                to: `
+                #include <color_fragment>
+                {
+                    //vec4 indexColor = texture2D(indexTexture, vUv);
+                    //float index = indexColor.r * 255.0 + indexColor.g * 255.0 * 256.0;
+                    //vec2 paletteUV = vec2((index + 0.5) / paletteTextureWidth, 0.5);
+                    //vec4 paletteColor = texture2D(paletteTexture, paletteUV);
+                    // diffuseColor.rgb += paletteColor.rgb;   // white outlines
 
-        // Edge split modifier
-        /*edgeSplitModifier = new EdgeSplitModifier();
-        console.log(edgeSplitModifier);
-        baseGeometry = BufferGeometryUtils.mergeVertices(helix.geometry);
-        var cutOffAngle = 30;
-        edgeSplitModifier.modify(
-            baseGeometry,
-            cutOffAngle * Math.PI / 180
-        );*/
-        //helix.geometry = edgeSplitModifier;
+                    //diffuseColor.rgb = vec3(sin(time));// * diffuseColor.rgb;  // black outlines
+                    diffuseColor.rgb = vec3(cos(time), cos(cos(time)*0.3), sin(time)/2.0);
+                }
+                `,
+            }//,
+            //{
+            //    from: 'vec3 outgoingLight = totalDiffuse + totalSpecular + totalEmissiveRadiance;',
+            //    to: 'vec3 outgoingLight = time * totalDiffuse + totalSpecular + totalEmissiveRadiance;'
+            //}
+        ];
 
-        //console.log("baseGeometry", baseGeometry);
-        //console.log("edgeSplitModifier", edgeSplitModifier);
-        
+        centralCylinder = object.scene.children[0]; // store the object's meshes
+        helix = object.scene.children[1]; 
 
-        //mesh = new THREE.Mesh( baseGeometry, new THREE.MeshStandardMaterial() );
-        //mesh.geometry = helix.geometry;
-        //scene.add(mesh);
-        
-        object.scene.children[0].material = new THREE.MeshStandardMaterial({
-            color: 0xffddff,
-            roughness: 0.0
+        var innerHelixMesh = object.scene.children[2].geometry;
+        innerHelix = new THREE.Mesh(innerHelixMesh, shaderMeshMaterial(new THREE.MeshBasicMaterial(), fragmentShaderReplacements));
+        scene.add(innerHelix);
+
+        // Create an environment map
+        var envMapLoader = new PMREMGenerator(renderer);
+        new RGBELoader().setPath("./").load("photoStudio.hdr", function(hdrmap) {
+            var envmap = envMapLoader.fromCubemap(hdrmap);
+
+            centralCylinder.material = new THREE.MeshStandardMaterial({
+                //color: 0xffddff,
+                roughness: 0.0
+            });
+            scene.add(centralCylinder);
+
+            helix.material = new THREE.MeshPhysicalMaterial({
+                //color: 0xf42342,
+                metalness: .9,
+                roughness: .5,
+                envMap: envmap.texture,
+                envMapIntensity: 0.9,
+                clearcoat: 1,
+                clearcoatRoughness: 0.1,
+                transparent: true,
+                //transmission: .95,
+                opacity: 0.7,
+                reflectivity: 0.3,
+                refractionRatio: 0.985,
+                ior: 0.9,
+                side: THREE.BackSide,
+            });
+            scene.add(helix);
         });
-        object.scene.children[1].material = new THREE.MeshStandardMaterial({
-            color: 0xffddff,
-            roughness: 0.0,
-            side: THREE.DoubleSide
-        });
-        object.scene.children[1].material.onBeforeCompile = function ( shader ) {
-            shader.uniforms.time = { value: currentTime };
-            shader.uniforms.resolution = { value: new THREE.Vector2(displayWidth, displayHeight) };
+
+        //innerHelix.material.onBeforeCompile = function ( shader ) {
+        //    shader.uniforms.time = { value: currentTime };
+        //    shader.uniforms.resolution = { value: new THREE.Vector2(displayWidth, displayHeight) };
+
+        //    fragmentShaderReplacements.forEach((rep) => {
+        //        shader.fragmentShader = shader.fragmentShader.replace(rep.from, rep.to);
+        //    });
+
+        //    innerHelix.material.userData.shader = shader;
+
+            /*shader.fragmentShader = "void main() {\n"
+            + "vec2 uv = fragCoord/iResolution.xy;\n"
+            + "vec3 col = 0.5 + 0.5*cos(iTime+uv.xyx+vec3(0,2,4));\n"
+            + "fragColor = vec4(col,1.0);\n"
+            + "}";*/
            
             //shader.uniform.emissive = { value: new THREE.Color(0.9, 0.1, 0.2) };
             
@@ -185,8 +213,31 @@ document.addEventListener("DOMContentLoaded", () => {
               ].join( '\n' )
             );
             materialShader = shader;*/
-            console.log(shader);
-          };
+        //    console.log(shader);
+        //};
+        //scene.add(object.scene);
+
+        //var environmentHDR = new THREE.TextureLoader().load( "./photoStudio.hdr" );
+        //pmrem.fromEquirectangular(environmentHDR);
+
+        // Edge split modifier
+        /*edgeSplitModifier = new EdgeSplitModifier();
+        console.log(edgeSplitModifier);
+        baseGeometry = BufferGeometryUtils.mergeVertices(helix.geometry);
+        var cutOffAngle = 30;
+        edgeSplitModifier.modify(
+            baseGeometry,
+            cutOffAngle * Math.PI / 180
+        );*/
+        //helix.geometry = edgeSplitModifier;
+
+        //console.log("baseGeometry", baseGeometry);
+        //console.log("edgeSplitModifier", edgeSplitModifier);
+        
+
+        //mesh = new THREE.Mesh( baseGeometry, new THREE.MeshStandardMaterial() );
+        //mesh.geometry = helix.geometry;
+        //scene.add(mesh);
 
         attemptToAnimate();
     }, undefined, function (error) {
@@ -201,4 +252,82 @@ document.addEventListener("DOMContentLoaded", () => {
     
 
     //animate();
+    // If all the models are loaded, then animate.
+    function attemptToAnimate() {
+        //if (centralCylinder && helix && innerHelix) {
+        if (innerHelix) {
+            animate();
+        }
+    }
+
+    function animate (timestamp) {
+        requestAnimationFrame(animate);
+        resizeRendererToDisplaySize(renderer);
+        //console.log("Timestamp: ", timestamp);
+        currentTime = timestamp/1000; // Current time in seconds.
+
+        // Update rotation
+        //helix.rotation.x += 0.006;
+        //helix.rotation.z += 0.006;
+        innerHelix.rotation.z -= 0.006; // The inner helix in the gltf file has its rotation reversed. This is why we must subtract instead of add.
+        //cameraRot += 0.01;
+        //camera.rotation.x = Math.sin(cameraRot);
+        
+        //console.log(monkey);
+        //console.log(innerHelix.material);
+        //innerHelix.material.userData.shader.uniforms.time.value = currentTime;
+
+        scene.traverse( function ( child ) {
+            if ( child.isMesh ) {
+                const shader = child.material.userData.shader;
+                if ( shader ) {
+                    //console.log(child);
+                    //console.log("Current time: " + currentTime, "Sin time: " + Math.sin(currentTime), "Cos time: " + Math.cos(currentTime));
+                    shader.uniforms.time.value = currentTime;
+                    //child.material.needsUpdate = true;
+                }
+            }
+        } );
+        //console.log(innerHelix);
+        
+        //cube.rotation.x += 0.01;
+        //cube.rotation.y += 0.01;
+
+        renderer.render( scene, camera );
+    };
+
+    // Creates a shader for a mesh material
+    function shaderMeshMaterial(materialType, fragmentShaderReplacements) {
+        var material = materialType;
+        material.onBeforeCompile = function ( shader ) {
+            shader.uniforms.time = { value: currentTime };
+            shader.uniforms.resolution = { value: new THREE.Vector2(displayWidth, displayHeight) };
+
+            fragmentShaderReplacements.forEach((rep) => {
+                shader.fragmentShader = shader.fragmentShader.replace(rep.from, rep.to);
+            });
+
+            //console.log(shader);
+
+            material.userData.shader = shader;
+            console.log(innerHelixMaterial);
+            //innerHelixMaterial = material;//console.log(material);
+        }
+        return material;
+    }
+
+    function resizeRendererToDisplaySize(renderer) {
+        const canvas = renderer.domElement;
+        const width = canvas.clientWidth;
+        const height = canvas.clientHeight;
+        const needResize = canvas.width !== width || canvas.height !== height;
+        if (needResize) {
+          renderer.setSize(width, height, false);
+        }
+        return needResize;
+    }
+
+    function deg2rad (deg) {
+        return deg * Math.PI / 180;
+    }
 });
