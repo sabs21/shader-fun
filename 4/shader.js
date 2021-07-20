@@ -20,17 +20,32 @@ document.addEventListener("DOMContentLoaded", () => {
     // Set the scene and camera up
     const scene = new THREE.Scene();
     const camera = new THREE.PerspectiveCamera( 
-        75, // fov
+        60, // fov
         displayWidth / displayHeight, // aspect ratio
         0.1, // near plane
         1000 // far plane
     );
-    camera.position.x = -4;
+    /*camera.position.x = -4;
     camera.position.y = 18;
     camera.position.z = 0;
     camera.rotation.x = deg2rad(270); //-1.2;
     camera.rotation.y = deg2rad(300); //-0.6;
-    camera.rotation.z = deg2rad(340); //0.3;
+    camera.rotation.z = deg2rad(340); //0.3;*/
+    camera.position.x = 0;
+    camera.position.y = 18;
+    camera.position.z = 0;
+    camera.rotation.x = deg2rad(270); //-1.2;
+    camera.rotation.y = deg2rad(0); //-0.6;
+    camera.rotation.z = deg2rad(0); //0.3;
+
+    var cameraX = 0;
+    var cameraZ = 0;
+
+    threeDisplay.addEventListener("mousemove", function(e) {
+        //console.log(e);
+        cameraX = (e.clientX/displayWidth) - 0.5;
+        cameraZ = (e.clientY/displayHeight) - 0.5;
+    });
 
     // Setup a point light
     const light = new THREE.DirectionalLight( 0xffffff, 1.0 );
@@ -38,7 +53,7 @@ document.addEventListener("DOMContentLoaded", () => {
     scene.add(light);
 
     // Setup WebGL
-    const renderer = new THREE.WebGLRenderer();
+    const renderer = new THREE.WebGLRenderer( {alpha: true} );
     renderer.setSize( displayWidth, displayHeight );
     renderer.setPixelRatio( window.devicePixelRatio );
     renderer.shadowMap.enabled = true;
@@ -53,7 +68,7 @@ document.addEventListener("DOMContentLoaded", () => {
     var centralCylinder = null;
     var helix = null;
     var innerHelix = null;
-    var innerHelixMaterial = null;
+    //var innerHelixMaterial = null;
     //var cameraRot = 0;
 
     // Create the vertex and fragment shaders
@@ -109,6 +124,22 @@ document.addEventListener("DOMContentLoaded", () => {
             }
         });*/ 
 
+        const vertexShaderReplacements = [
+            {
+                from: '#include <common>',
+                to: `#include <common>
+                uniform vec2 bboxMin;
+                uniform vec2 bboxMax;
+                varying vec2 vUv;`
+            },
+            {
+                from: '#include <uv_vertex>',
+                to: `#include <uv_vertex>
+                vUv.x = (position.x - bboxMin.x) / (bboxMax.x - bboxMin.x);
+                vUv.y = (position.y - bboxMin.y) / (bboxMax.y - bboxMin.y);`
+            },
+        ];
+
         const fragmentShaderReplacements = [
             {
                 from: '#include <common>',
@@ -116,6 +147,7 @@ document.addEventListener("DOMContentLoaded", () => {
                 #include <common>
                 uniform float time;
                 uniform float resolution;
+                varying vec2 vUv;
                 `,
             },
             {
@@ -130,7 +162,10 @@ document.addEventListener("DOMContentLoaded", () => {
                     // diffuseColor.rgb += paletteColor.rgb;   // white outlines
 
                     //diffuseColor.rgb = vec3(sin(time));// * diffuseColor.rgb;  // black outlines
-                    diffuseColor.rgb = vec3(cos(time), cos(cos(time)*0.3), sin(time)/2.0);
+                    vec3 diffuseCol = vec3(cos(time), cos(cos(time)*0.3), sin(time)/2.0);
+                    vec3 color1 = vec3(0.0, 0.7, 1.0);
+                    vec3 color2 = vec3(1.0, 0.2, 0.4);
+                    diffuseColor.rgb = diffuseCol * mix(color1, color2, vUv.y);
                 }
                 `,
             }//,
@@ -144,7 +179,9 @@ document.addEventListener("DOMContentLoaded", () => {
         helix = object.scene.children[1]; 
 
         var innerHelixMesh = object.scene.children[2].geometry;
-        innerHelix = new THREE.Mesh(innerHelixMesh, shaderMeshMaterial(new THREE.MeshBasicMaterial(), fragmentShaderReplacements));
+        console.log(object.scene.children[2]);
+        innerHelix = new THREE.Mesh(innerHelixMesh, shaderMeshMaterial(new THREE.MeshBasicMaterial(), innerHelixMesh, vertexShaderReplacements, fragmentShaderReplacements));
+        innerHelix = applyTransform(object.scene.children[2], innerHelix);
         scene.add(innerHelix);
 
         // Create an environment map
@@ -154,14 +191,17 @@ document.addEventListener("DOMContentLoaded", () => {
 
             centralCylinder.material = new THREE.MeshStandardMaterial({
                 //color: 0xffddff,
-                roughness: 0.0
+                roughness: 0.2,
+                metalness: 0.9,
+                envMap: envmap.texture,
+                envMapIntensity: 0.5
             });
-            scene.add(centralCylinder);
+            //scene.add(centralCylinder);
 
             helix.material = new THREE.MeshPhysicalMaterial({
                 //color: 0xf42342,
                 metalness: .9,
-                roughness: .5,
+                roughness: .0,
                 envMap: envmap.texture,
                 envMapIntensity: 0.9,
                 clearcoat: 1,
@@ -169,7 +209,7 @@ document.addEventListener("DOMContentLoaded", () => {
                 transparent: true,
                 //transmission: .95,
                 opacity: 0.7,
-                reflectivity: 0.3,
+                reflectivity: 0.8,
                 refractionRatio: 0.985,
                 ior: 0.9,
                 side: THREE.BackSide,
@@ -268,8 +308,11 @@ document.addEventListener("DOMContentLoaded", () => {
 
         // Update rotation
         //helix.rotation.x += 0.006;
-        //helix.rotation.z += 0.006;
+        helix.rotation.z += 0.006;
         innerHelix.rotation.z -= 0.006; // The inner helix in the gltf file has its rotation reversed. This is why we must subtract instead of add.
+
+        camera.position.x = cameraX;
+        camera.position.z = cameraZ;
         //cameraRot += 0.01;
         //camera.rotation.x = Math.sin(cameraRot);
         
@@ -297,23 +340,42 @@ document.addEventListener("DOMContentLoaded", () => {
     };
 
     // Creates a shader for a mesh material
-    function shaderMeshMaterial(materialType, fragmentShaderReplacements) {
+    function shaderMeshMaterial(materialType, geometry, vertexShaderReplacements, fragmentShaderReplacements) {
         var material = materialType;
         material.onBeforeCompile = function ( shader ) {
             shader.uniforms.time = { value: currentTime };
             shader.uniforms.resolution = { value: new THREE.Vector2(displayWidth, displayHeight) };
+            shader.uniforms.bboxMin = { value: geometry.boundingBox.min };
+            shader.uniforms.bboxMax = { value: geometry.boundingBox.max };
+
+            vertexShaderReplacements.forEach((rep) => {
+                shader.vertexShader = shader.vertexShader.replace(rep.from, rep.to);
+            });
 
             fragmentShaderReplacements.forEach((rep) => {
                 shader.fragmentShader = shader.fragmentShader.replace(rep.from, rep.to);
             });
 
-            //console.log(shader);
-
             material.userData.shader = shader;
-            console.log(innerHelixMaterial);
-            //innerHelixMaterial = material;//console.log(material);
         }
         return material;
+    }
+
+    // For when a new mesh is created and the old mesh's transforms need to be carried over.
+    function applyTransform(meshFromScene, newMesh) {
+        newMesh.position.x = meshFromScene.position.x;
+        newMesh.position.y = meshFromScene.position.y;
+        newMesh.position.z = meshFromScene.position.z;
+
+        newMesh.rotation.x = meshFromScene.rotation.x;
+        newMesh.rotation.y = meshFromScene.rotation.y;
+        newMesh.rotation.z = meshFromScene.rotation.z;
+
+        newMesh.scale.x = meshFromScene.scale.x;
+        newMesh.scale.y = meshFromScene.scale.y;
+        newMesh.scale.z = meshFromScene.scale.z;
+
+        return newMesh;
     }
 
     function resizeRendererToDisplaySize(renderer) {
