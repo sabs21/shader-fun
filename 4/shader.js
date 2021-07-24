@@ -230,7 +230,11 @@ document.addEventListener("DOMContentLoaded", () => {
         // Turn the inner helix into a colorful, wiggly shader.
         innerHelix = object.scene.children[1];
         var innerHelixGeometry = innerHelix.geometry;
-        var innerHelixMaterial = shaderMeshMaterial(new THREE.MeshNormalMaterial(), innerHelixGeometry, innerHelixVertexShaderReplacements, innerHelixFragmentShaderReplacements);
+        var innerHelixMaterial = mrDoobWay2({
+            red: 0.9, 
+            green: 0.2, 
+            blue: 0.5
+        });//shaderMeshMaterial(new THREE.MeshNormalMaterial(), innerHelixGeometry, innerHelixVertexShaderReplacements, innerHelixFragmentShaderReplacements);
         var innerHelixMesh = new THREE.Mesh(innerHelixGeometry, innerHelixMaterial);
         innerHelix = cloneTransform(innerHelix, innerHelixMesh);
         scene.add(innerHelix);
@@ -239,7 +243,11 @@ document.addEventListener("DOMContentLoaded", () => {
         // Turn the horseshoe into a shader.
         horseshoe = object.scene.children[2];
         var horseshoeGeometry = horseshoe.geometry;
-        var horseshoeMaterial = shaderMeshMaterial(new THREE.MeshNormalMaterial(), horseshoeGeometry, horseshoeVertexShaderReplacements, horseshoeFragmentShaderReplacements);
+        var horseshoeMaterial = mrDoobWay2({
+            red: 0.1, 
+            green: 1.0, 
+            blue: 0.7
+        });//shaderMeshMaterial(new THREE.MeshNormalMaterial(), horseshoeGeometry, horseshoeVertexShaderReplacements, horseshoeFragmentShaderReplacements);
         var horseshoeMesh = new THREE.Mesh(horseshoeGeometry, horseshoeMaterial);
         horseshoe = cloneTransform(horseshoe, horseshoeMesh);
         horseshoe.rotation.z = deg2rad(180); // Orient the horseshoe to the correct position and rotation.
@@ -416,6 +424,64 @@ document.addEventListener("DOMContentLoaded", () => {
 
             material.userData.shader = shader;
         }
+
+        material.customProgramCacheKey = function () {
+            return fragmentShaderReplacements;
+        };
+
+        return material;
+    }
+
+    function mrDoobWay(redness) {
+        var material = new THREE.MeshNormalMaterial();
+        material.onBeforeCompile = function ( shader ) {
+            shader.uniforms.time = { value: 0 };
+
+            shader.fragmentShader = 'uniform float time;\n' + shader.fragmentShader;
+            shader.fragmentShader = shader.fragmentShader.replace(
+                `gl_FragColor = vec4( packNormalToRGB( normal ), opacity );`,
+                `gl_FragColor = vec4(vec3(${ redness }, 0.0, 0.0), opacity);`,
+            );
+
+            console.log(shader);
+
+            material.userData.shader = shader;
+        }
+
+        // Make sure WebGLRenderer doesnt reuse a single program
+        material.customProgramCacheKey = function () {
+            return redness;
+        };
+
+        return material;
+    }
+
+    // Doesn't work
+    function mrDoobWay2(customizeObj) {
+        var material = new THREE.MeshNormalMaterial();
+        material.onBeforeCompile = function ( shader ) {
+            shader.uniforms.time = { value: 0 };
+
+            shader.fragmentShader = 'uniform float time;\n' + shader.fragmentShader;
+            shader.fragmentShader = shader.fragmentShader.replace(
+                `gl_FragColor = vec4( packNormalToRGB( normal ), opacity );`,
+                `gl_FragColor = vec4(vec3(${ customizeObj.red }, ${ customizeObj.green }, ${ customizeObj.blue }), opacity);`,
+            );
+
+            console.log(shader);
+
+            material.userData.shader = shader;
+        }
+
+        // Make sure WebGLRenderer doesnt reuse a single program
+        material.customProgramCacheKey = function () {
+            return [
+                customizeObj.red,
+                customizeObj.green,
+                customizeObj.blue
+            ];
+        };
+
         return material;
     }
 });
