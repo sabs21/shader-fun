@@ -230,10 +230,25 @@ document.addEventListener("DOMContentLoaded", () => {
         // Turn the inner helix into a colorful, wiggly shader.
         innerHelix = object.scene.children[1];
         var innerHelixGeometry = innerHelix.geometry;
-        var innerHelixMaterial = mrDoobWay2({
-            red: 0.9, 
-            green: 0.2, 
-            blue: 0.5
+        var innerHelixMaterial = mrDoobWay3(innerHelixGeometry, {
+            vertexFunctions: '',
+            vertex: `float theta = (sin(time*2.0 + position.x) + cos(time*2.0 + position.y)) / 180.0;
+            float c = cos( theta );
+            float s = sin( theta );
+            mat3 m = mat3( c, 0, s, 
+                           0, 1, 0, 
+                           -s, 0, c );
+            transformed = vec3( position ) * m;
+            vNormal = vNormal * m;`,
+            fragmentFunctions: `vec3 hsb2rgb( in vec3 c ){
+                vec3 rgb = clamp(abs(mod(c.x*6.0+vec3(0.0,4.0,2.0),
+                                         6.0)-3.0)-1.0,
+                                 0.0,
+                                 1.0 );
+                rgb = rgb*rgb*(3.0-2.0*rgb);
+                return c.z * mix(vec3(1.0), rgb, c.y);
+            }`,
+            fragment: `gl_FragColor = vec4( hsb2rgb( vec3(sin(time+vUv.x) * cos(time+vUv.y), 1.0, 1.0) * packNormalToRGB(normal) ), opacity );`
         });//shaderMeshMaterial(new THREE.MeshNormalMaterial(), innerHelixGeometry, innerHelixVertexShaderReplacements, innerHelixFragmentShaderReplacements);
         var innerHelixMesh = new THREE.Mesh(innerHelixGeometry, innerHelixMaterial);
         innerHelix = cloneTransform(innerHelix, innerHelixMesh);
@@ -243,10 +258,19 @@ document.addEventListener("DOMContentLoaded", () => {
         // Turn the horseshoe into a shader.
         horseshoe = object.scene.children[2];
         var horseshoeGeometry = horseshoe.geometry;
-        var horseshoeMaterial = mrDoobWay2({
-            red: 0.1, 
-            green: 1.0, 
-            blue: 0.7
+        var horseshoeMaterial = mrDoobWay3(horseshoeGeometry, {
+            vertexFunctions: '',
+            vertex: '',
+            fragmentFunctions: `float circle(vec2 st, vec2 center, float size, float blur) {
+                float circ = 0.0;
+                float dist = distance(st, center);
+                if (dist < size) {
+                    circ += smoothstep(dist, dist+blur, size);
+                }
+                return circ;
+            }`,
+            fragment: `vec3 dot = vec3(circle(vUv, vUv, 0.01, 0.001));
+            gl_FragColor = vec4(vec3(dot.x, dot.y, dot.z), opacity );`
         });//shaderMeshMaterial(new THREE.MeshNormalMaterial(), horseshoeGeometry, horseshoeVertexShaderReplacements, horseshoeFragmentShaderReplacements);
         var horseshoeMesh = new THREE.Mesh(horseshoeGeometry, horseshoeMaterial);
         horseshoe = cloneTransform(horseshoe, horseshoeMesh);
@@ -456,7 +480,6 @@ document.addEventListener("DOMContentLoaded", () => {
         return material;
     }
 
-    // Doesn't work
     function mrDoobWay2(customizeObj) {
         var material = new THREE.MeshNormalMaterial();
         material.onBeforeCompile = function ( shader ) {
@@ -479,6 +502,63 @@ document.addEventListener("DOMContentLoaded", () => {
                 customizeObj.red,
                 customizeObj.green,
                 customizeObj.blue
+            ];
+        };
+
+        return material;
+    }
+
+    function mrDoobWay3(geometry, shaderCode) {
+        var material = new THREE.MeshNormalMaterial();
+        material.onBeforeCompile = function ( shader ) {
+            shader.uniforms.time = { value: 0 };
+            shader.uniforms.resolution = { value: new THREE.Vector2(displayDimensions.width, displayDimensions.height) };
+            shader.uniforms.bboxMin = { value: geometry.boundingBox.min };
+            shader.uniforms.bboxMax = { value: geometry.boundingBox.max };
+
+            // Uniforms
+            shader.vertexShader = 'uniform float time;\nuniform float resolution;\nuniform vec2 bboxMin;\nuniform vec2 bboxMax;\nvarying vec2 vUv;\n' + shader.vertexShader;
+            // Vertex Functions
+            shader.vertexShader = shader.vertexShader.replace(
+                '#include <common>',
+                `#include <common>
+                ${ shaderCode.vertexFunctions }`
+            )
+            // Vertex Code
+            shader.vertexShader = shader.vertexShader.replace(
+                `#include <begin_vertex>`,
+                `#include <begin_vertex>
+                vUv.x = (position.x - bboxMin.x) / (bboxMax.x - bboxMin.x);
+                vUv.y = (position.y - bboxMin.y) / (bboxMax.y - bboxMin.y);
+                ${ shaderCode.vertex }`,
+            );
+
+            // Uniforms
+            shader.fragmentShader = 'uniform float time;\nuniform float resolution;\nvarying vec2 vUv;\n' + shader.fragmentShader;
+            // Fragment Functions
+            shader.fragmentShader = shader.fragmentShader.replace(
+                '#include <packing>',
+                `#include <packing>
+                ${ shaderCode.fragmentFunctions }`
+            )
+            // Fragment Code
+            shader.fragmentShader = shader.fragmentShader.replace(
+                `gl_FragColor = vec4( packNormalToRGB( normal ), opacity );`,
+                `${ shaderCode.fragment }`,
+            );
+
+            console.log(shader);
+
+            material.userData.shader = shader;
+        }
+
+        // Make sure WebGLRenderer doesnt reuse a single program
+        material.customProgramCacheKey = function () {
+            return [
+                shaderCode.vertexFunctions,
+                shaderCode.vertex,
+                shaderCode.fragmentFunctions,
+                shaderCode.fragment
             ];
         };
 
