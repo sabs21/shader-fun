@@ -3,10 +3,13 @@
   margin: 0px;
   font-family: "Arial Narrow", Arial, sans-serif;
 }
+html, body {
+  height: 100%;
+}
 section {
   padding: 10px;
 }
-#threeDisplay {
+#threeDisplay, canvas {
   position: relative;
   display: block;
   width: 100%;

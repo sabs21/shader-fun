@@ -45,162 +45,6 @@ document.addEventListener("DOMContentLoaded", () => {
     // Setup WebGL renderer
     const renderer = initRenderer();
     threeDisplay.appendChild( renderer.domElement );
-
-    // Vertex and fragment shader edits
-    // Where to find info on the various imports that three.js does: three.js/src/renderers/shaders/ShaderChunk/
-    const innerHelixVertexShaderReplacements = [
-        {
-            from: '#include <common>',
-            to: `#include <common>
-            uniform float time;
-            uniform float resolution;
-            uniform vec2 bboxMin;
-            uniform vec2 bboxMax;
-            varying vec2 vUv;`
-        },
-        {
-            from: '#include <uv_vertex>',
-            to: `#include <uv_vertex>
-            vUv.x = (position.x - bboxMin.x) / (bboxMax.x - bboxMin.x);
-            vUv.y = (position.y - bboxMin.y) / (bboxMax.y - bboxMin.y);`
-        },
-        {
-            from: '#include <begin_vertex>',
-            to: `#include <begin_vertex>
-                float theta = (sin(time*2.0 + position.x) + cos(time*2.0 + position.y)) / 180.0;
-                float c = cos( theta );
-                float s = sin( theta );
-                mat3 m = mat3( c, 0, s, 
-                               0, 1, 0, 
-                               -s, 0, c );
-                transformed = vec3( position ) * m;
-                vNormal = vNormal * m;
-            `
-        }
-    ];
-    const innerHelixFragmentShaderReplacements = [
-        /*{
-            from: '#include <common>',
-            to: `
-            #include <common>
-            uniform float time;
-            uniform float resolution;
-            varying vec2 vUv;
-            `
-        },*/
-        {
-            from: '#include <packing>',
-            to: `
-            #include <packing>
-            uniform float time;
-            uniform float resolution;
-            varying vec2 vUv;
-            vec3 hsb2rgb( in vec3 c ){
-                vec3 rgb = clamp(abs(mod(c.x*6.0+vec3(0.0,4.0,2.0),
-                                         6.0)-3.0)-1.0,
-                                         0.0,
-                                         1.0 );
-                rgb = rgb*rgb*(3.0-2.0*rgb);
-                return c.z * mix(vec3(1.0), rgb, c.y);
-            }`
-        },
-        {
-            from: 'gl_FragColor = vec4( packNormalToRGB( normal ), opacity );',
-            to: 'gl_FragColor = vec4( hsb2rgb( vec3(sin(time+vUv.x) * cos(time+vUv.y), 1.0, 1.0) * packNormalToRGB(normal) ), opacity );'
-        }
-        /*{
-            from: '#include <color_fragment>',
-            to: `
-            #include <color_fragment>
-            {
-                //vec4 indexColor = texture2D(indexTexture, vUv);
-                //float index = indexColor.r * 255.0 + indexColor.g * 255.0 * 256.0;
-                //vec2 paletteUV = vec2((index + 0.5) / paletteTextureWidth, 0.5);
-                //vec4 paletteColor = texture2D(paletteTexture, paletteUV);
-                // diffuseColor.rgb += paletteColor.rgb;   // white outlines
-
-                //diffuseColor.rgb = vec3(sin(time));// * diffuseColor.rgb;  // black outlines
-                vec3 diffuseCol = vec3(cos(time), cos(cos(time)*0.3), sin(time)/2.0);
-                vec3 color1 = vec3(0.0, 0.7, 1.0);
-                vec3 color2 = vec3(1.0, 0.2, 0.4);
-                diffuseColor.rgb = diffuseCol * mix(color1, color2, vUv.y);
-            }
-            `,
-        },
-        {
-            from: 'vec3 outgoingLight = totalDiffuse + totalSpecular + totalEmissiveRadiance;',
-            to: 'vec3 outgoingLight = time * totalDiffuse + totalSpecular + totalEmissiveRadiance;'
-        }*/
-    ];
-
-    const horseshoeVertexShaderReplacements = [
-        {
-            from: '#include <common>',
-            to: `#include <common>
-            uniform float time;
-            uniform float resolution;
-            uniform vec2 bboxMin;
-            uniform vec2 bboxMax;
-            varying vec2 vUv;`
-        },
-        {
-            from: '#include <uv_vertex>',
-            to: `#include <uv_vertex>
-            vUv.x = (position.x - bboxMin.x) / (bboxMax.x - bboxMin.x);
-            vUv.y = (position.y - bboxMin.y) / (bboxMax.y - bboxMin.y);`
-        }
-        /*,
-        {
-            from: '#include <begin_vertex>',
-            to: `#include <begin_vertex>
-                float theta = (sin(time*2.0 + position.x) + cos(time*2.0 + position.y));
-                float c = cos( theta );
-                float s = sin( theta );
-                mat3 m = mat3( c, 0, s, 
-                               0, 1, 0, 
-                               -s, 0, c );
-                transformed = vec3( position ) * m;
-                vNormal = vNormal * m;
-            `
-        }*/
-    ];
-    const horseshoeFragmentShaderReplacements = [
-        {
-            from: '#include <packing>',
-            to: `
-            #include <packing>
-            uniform float time;
-            uniform float resolution;
-            varying vec2 vUv;
-            vec3 hsb2rgb( in vec3 c ){
-                vec3 rgb = clamp(abs(mod(c.x*6.0+vec3(0.0,4.0,2.0),
-                                         6.0)-3.0)-1.0,
-                                 0.0,
-                                 1.0 );
-                rgb = rgb*rgb*(3.0-2.0*rgb);
-                return c.z * mix(vec3(1.0), rgb, c.y);
-            }
-            float circle(vec2 st, vec2 center, float size, float blur) {
-                float circ = 0.0;
-                float dist = distance(st, center);
-                if (dist < size) {
-                    circ += smoothstep(dist, dist+blur, size);
-                }
-                return circ;
-            }`
-        },
-        {
-            from: 'gl_FragColor = vec4( packNormalToRGB( normal ), opacity );',
-            to: `
-            //float dotMap = 0.0;
-            //dotMap += circle(vUv, vUv, 0.01, 0.001);
-
-            vec3 dot = vec3(circle(vUv, vUv, 0.01, 0.001));
-            gl_FragColor = vec4(vec3(dot.x, dot.y, dot.z), opacity );
-            `
-        }
-    ];
-
     
     // Load the gltf model
     new GLTFLoader().load( "./spiral_pillar_hq_horseshoe.glb", function (object) {
@@ -248,7 +92,7 @@ document.addEventListener("DOMContentLoaded", () => {
                 rgb = rgb*rgb*(3.0-2.0*rgb);
                 return c.z * mix(vec3(1.0), rgb, c.y);
             }`,
-            fragment: `gl_FragColor = vec4( hsb2rgb( vec3(sin(time+vUv.x) * cos(time+vUv.y), 1.0, 1.0) * packNormalToRGB(normal) ), opacity );`
+            fragment: `gl_FragColor = vec4( hsb2rgb( vec3(sin(time+vUv.x) * cos(time+pos.z) , 1.0, 1.0) * packNormalToRGB(normal) ), opacity );`
         });//shaderMeshMaterial(new THREE.MeshNormalMaterial(), innerHelixGeometry, innerHelixVertexShaderReplacements, innerHelixFragmentShaderReplacements);
         var innerHelixMesh = new THREE.Mesh(innerHelixGeometry, innerHelixMaterial);
         innerHelix = cloneTransform(innerHelix, innerHelixMesh);
@@ -508,6 +352,13 @@ document.addEventListener("DOMContentLoaded", () => {
         return material;
     }
 
+    // shaderCode is an object which looks like this:
+    // {
+    //     shaderCode.vertexFunctions: '// glsl vertex shader functions',
+    //     shaderCode.vertex: '// glsl vertex shader code.',
+    //     shaderCode.fragmentFunctions: '// glsl fragment shader functions',
+    //     shaderCode.fragment: '// glsl fragment shader code. Must include gl_FragColor definition.'
+    // }
     function mrDoobWay3(geometry, shaderCode) {
         var material = new THREE.MeshNormalMaterial();
         material.onBeforeCompile = function ( shader ) {
@@ -517,7 +368,7 @@ document.addEventListener("DOMContentLoaded", () => {
             shader.uniforms.bboxMax = { value: geometry.boundingBox.max };
 
             // Uniforms
-            shader.vertexShader = 'uniform float time;\nuniform float resolution;\nuniform vec2 bboxMin;\nuniform vec2 bboxMax;\nvarying vec2 vUv;\n' + shader.vertexShader;
+            shader.vertexShader = 'uniform float time;\nuniform float resolution;\nuniform vec2 bboxMin;\nuniform vec2 bboxMax;\nvarying vec2 vUv;\nvarying vec3 pos;\n' + shader.vertexShader;
             // Vertex Functions
             shader.vertexShader = shader.vertexShader.replace(
                 '#include <common>',
@@ -530,11 +381,12 @@ document.addEventListener("DOMContentLoaded", () => {
                 `#include <begin_vertex>
                 vUv.x = (position.x - bboxMin.x) / (bboxMax.x - bboxMin.x);
                 vUv.y = (position.y - bboxMin.y) / (bboxMax.y - bboxMin.y);
+                pos = vec3(position.x, position.y, position.z);
                 ${ shaderCode.vertex }`,
             );
 
             // Uniforms
-            shader.fragmentShader = 'uniform float time;\nuniform float resolution;\nvarying vec2 vUv;\n' + shader.fragmentShader;
+            shader.fragmentShader = 'uniform float time;\nuniform float resolution;\nvarying vec2 vUv;\nvarying vec3 pos;\n' + shader.fragmentShader;
             // Fragment Functions
             shader.fragmentShader = shader.fragmentShader.replace(
                 '#include <packing>',
@@ -546,6 +398,74 @@ document.addEventListener("DOMContentLoaded", () => {
                 `gl_FragColor = vec4( packNormalToRGB( normal ), opacity );`,
                 `${ shaderCode.fragment }`,
             );
+
+            console.log(shader);
+
+            material.userData.shader = shader;
+        }
+
+        // Make sure WebGLRenderer doesnt reuse a single program
+        material.customProgramCacheKey = function () {
+            return [
+                shaderCode.vertexFunctions,
+                shaderCode.vertex,
+                shaderCode.fragmentFunctions,
+                shaderCode.fragment
+            ];
+        };
+
+        return material;
+    }
+
+    function mrDoobWay4(geometry, shaderCode) {
+        var material = new THREE.MeshNormalMaterial();
+        material.onBeforeCompile = function ( shader ) {
+            shader.uniforms.time = { value: 0 };
+            shader.uniforms.resolution = { value: new THREE.Vector2(displayDimensions.width, displayDimensions.height) };
+            shader.uniforms.bboxMin = { value: geometry.boundingBox.min };
+            shader.uniforms.bboxMax = { value: geometry.boundingBox.max };
+
+            // Uniforms
+            shader.vertexShader = 'uniform float time;\nuniform float resolution;\nuniform vec2 bboxMin;\nuniform vec2 bboxMax;\nvarying vec2 vUv;\nvarying vec3 pos;\n' + shader.vertexShader;
+            // Vertex Functions
+            shader.vertexShader = shader.vertexShader.replace(
+                '#include <common>',
+                `#include <common>
+                ${ shaderCode.vertexFunctions }`
+            )
+            // Vertex Uniform Definition Code
+            shader.vertexShader = shader.vertexShader.replace(
+                `#include <begin_vertex>`,
+                `#include <begin_vertex>
+                vUv.x = (position.x - bboxMin.x) / (bboxMax.x - bboxMin.x);
+                vUv.y = (position.y - bboxMin.y) / (bboxMax.y - bboxMin.y);
+                pos = vec3(position.x, position.y, position.z);`,
+            );
+            if (shaderCode.vertex && shaderCode.vertex != '') {
+                // Vertex Code
+                // Code must include the definition of gl_Position
+                shader.vertexShader = shader.vertexShader.replace(
+                    `gl_Position = projectionMatrix * mvPosition;`,
+                    `${ shaderCode.vertex }`,
+                );
+            }
+
+            // Uniforms
+            shader.fragmentShader = 'uniform float time;\nuniform float resolution;\nvarying vec2 vUv;\nvarying vec3 pos;\n' + shader.fragmentShader;
+            // Fragment Functions
+            shader.fragmentShader = shader.fragmentShader.replace(
+                '#include <packing>',
+                `#include <packing>
+                ${ shaderCode.fragmentFunctions }`
+            )
+            if (shaderCode.fragment && shaderCode.fragment != '') {
+                // Fragment Code
+                // Code must include the definition of gl_FragColor
+                shader.fragmentShader = shader.fragmentShader.replace(
+                    `gl_FragColor = vec4( packNormalToRGB( normal ), opacity );`,
+                    `${ shaderCode.fragment }`,
+                );
+            }
 
             console.log(shader);
 
