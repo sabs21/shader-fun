@@ -14,6 +14,7 @@ import {
 } from '../../../three.module.js';
 import { Reflector } from './Reflector.js';
 import { Refractor } from './Refractor.js';
+import { DoubleSide } from '../../../src/constants.js';
 
 /**
  * References:
@@ -42,6 +43,11 @@ class Water extends Mesh {
 		const scale = options.scale || 1;
 		const shader = options.shader || Water.WaterShader;
 		const encoding = options.encoding !== undefined ? options.encoding : LinearEncoding;
+
+		const roundOffCenter = options.roundOffCenter || new Vector2(0, 0);
+		const roundOffRadiusX = options.roundOffRadiusX || 1;
+		const roundOffRadiusZ = options.roundOffRadiusZ || 1;
+		const roundOffBoundingBox = options.roundOffBoundingBox || null;
 
 		const textureLoader = new TextureLoader();
 
@@ -97,7 +103,8 @@ class Water extends Mesh {
 			vertexShader: shader.vertexShader,
 			fragmentShader: shader.fragmentShader,
 			transparent: true,
-			fog: true
+			fog: true,
+			side: DoubleSide
 		} );
 
 		if ( flowMap !== undefined ) {
@@ -133,6 +140,12 @@ class Water extends Mesh {
 		this.material.uniforms[ 'color' ].value = color;
 		this.material.uniforms[ 'reflectivity' ].value = reflectivity;
 		this.material.uniforms[ 'textureMatrix' ].value = textureMatrix;
+
+		// Clipping
+		this.material.uniforms[ 'roundOffCenter' ].value = roundOffCenter
+		this.material.uniforms[ 'roundOffRadiusX' ].value = roundOffRadiusX;
+		this.material.uniforms[ 'roundOffRadiusZ' ].value = roundOffRadiusZ;
+		this.material.uniforms[ 'roundOffBoundingBox' ].value = roundOffBoundingBox;
 
 		// inital values
 
@@ -258,8 +271,29 @@ Water.WaterShader = {
 		'config': {
 			type: 'v4',
 			value: new Vector4()
-		}
+		},
 
+		// For clipping the plane
+		'roundOffCenter': {
+			type: 'v2',
+			value: new Vector2()
+		},
+
+		'roundOffRadiusX': {
+			type: 'f',
+			value: 1.0
+		},
+
+		'roundOffRadiusZ': {
+			type: 'f',
+			value: 1.0
+		},
+
+		'roundOffBoundingBox': {
+			type: 'v2',
+			value: new Vector2()
+		}
+		
 	},
 
 	vertexShader: /* glsl */`
@@ -274,6 +308,7 @@ Water.WaterShader = {
 		varying vec4 vCoord;
 		varying vec2 vUv;
 		varying vec3 vToEye;
+		varying vec4 worldPosition;
 
 		vec4 permute(vec4 x){return mod(((x*34.0)+1.0)*x, 289.0);}
 		vec4 taylorInvSqrt(vec4 r){return 1.79284291400159 - 0.85373472095314 * r;}
@@ -352,7 +387,7 @@ Water.WaterShader = {
 			vUv = uv;
 			vCoord = textureMatrix * vec4( position , 1.0 );
 
-			vec4 worldPosition = modelMatrix * vec4( position , 1.0 );
+			worldPosition = modelMatrix * vec4( position, 1.0 );
 			worldPosition.y += pnoise(position + time) / 5.0;
 			vToEye = cameraPosition - worldPosition.xyz;
 
@@ -385,9 +420,15 @@ Water.WaterShader = {
 		uniform float reflectivity;
 		uniform vec4 config;
 
+		uniform vec2 roundOffCenter;
+		uniform float roundOffRadiusX;
+		uniform float roundOffRadiusZ;
+		uniform vec2 roundOffBoundingBox;
+
 		varying vec4 vCoord;
 		varying vec2 vUv;
 		varying vec3 vToEye;
+		varying vec4 worldPosition;
 
 		void main() {
 
@@ -399,6 +440,36 @@ Water.WaterShader = {
 			float scale = config.w;
 
 			vec3 toEye = normalize( vToEye );
+
+			// Round off the corners near the front of the bottle
+			vec2 unitVector = vec2(worldPosition.x - roundOffCenter.x, worldPosition.z - roundOffCenter.y);
+			// Find theta.
+			float theta = 0.0;
+			if (unitVector.x == 0.0 && unitVector.y == 0.0) {
+				theta = 0.0;
+			}
+			else if (unitVector.x == 0.0) {
+				// Account for edge cases where x is 0
+				if (unitVector.y > 0.0) {
+					theta = PI/2.0;
+				}
+				else {
+					theta = 3.0*PI/2.0;
+				}
+			}
+			else {
+				theta = atan(unitVector.y, unitVector.x);
+			}
+			// Find point on the curve using theta
+			vec2 curvePoint = vec2(roundOffRadiusX*cos(theta), roundOffRadiusZ*sin(theta));
+			// Check if the original point is beyond this point on the curve.
+			bool isBeyond = abs(worldPosition.z) < curvePoint.x || abs(worldPosition.z) > abs(curvePoint.y);
+			// Make sure that only the positive y hemisphere is checked
+			bool xIsNegative = unitVector.x < 0.0;
+			// If the point is beyond the curve point, remove it.
+			if (xIsNegative && isBeyond) {
+				discard;
+			}
 
 			// determine flow direction
 			vec2 flow;
@@ -421,7 +492,7 @@ Water.WaterShader = {
 			vec3 normal = normalize( vec3( normalColor.r * 2.0 - 1.0, normalColor.b,  normalColor.g * 2.0 - 1.0 ) );
 
 			// calculate the fresnel term to blend reflection and refraction maps
-			float theta = max( dot( toEye, normal ), 0.0 );
+			theta = max( dot( toEye, normal ), 0.0 );
 			float reflectance = reflectivity + ( 1.0 - reflectivity ) * pow( ( 1.0 - theta ), 5.0 );
 
 			// calculate final uv coords
