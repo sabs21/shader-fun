@@ -2,8 +2,8 @@ import * as THREE from "./three.module.js";
 import { OrbitControls } from './examples/jsm/controls/OrbitControls.js';
 import { Water } from './examples/jsm/objects/Water2.js';
 import { GLTFLoader } from './examples/jsm/loaders/GLTFLoader.js';
-import { RGBELoader } from './examples/jsm/loaders/RGBELoader.js';
-import { PMREMGenerator } from './src/extras/PMREMGenerator.js';
+//import { RGBELoader } from './examples/jsm/loaders/RGBELoader.js';
+//import { PMREMGenerator } from './src/extras/PMREMGenerator.js';
 
 document.addEventListener("DOMContentLoaded", () => {
     const threeDisplay = document.getElementById("threeDisplay");
@@ -23,16 +23,6 @@ document.addEventListener("DOMContentLoaded", () => {
     camera.position.set(0, 1, 4);
     camera.lookAt(scene.position);
 
-    //camera.rotation.y = THREE.Math.degToRad(30);
-    //camera.rotation.z = THREE.Math.degToRad(30);*/
-    /*new RGBELoader().setPath("./").load("canada_montreal_thea.hdr", function(hdrmap) {
-        // Setup environment map
-        var envmap = new PMREMGenerator(renderer).fromCubemap(hdrmap);
-        scene.environment = envmap.texture;
-        scene.background = envmap.texture;
-    });*/
-    //scene.rotateY(THREE.Math.degToRad(180));
-
     // Add water mesh
     const planeWidth = 4.8;
     const planeHeight = 2.2;  
@@ -49,60 +39,13 @@ document.addEventListener("DOMContentLoaded", () => {
         roundOffRadiusX: 1.1,
         roundOffRadiusZ: 1.1,
     } );
-    //water.position.y = 1;
     water.rotation.x = THREE.Math.degToRad(270);
     water.position.x = -0.15;
-    //water.rotation.y = THREE.Math.degToRad(180);
-    //water.scale.x = 0.65;
-    //water.scale.z = 0.55;
-    //water.renderOrder = 1; // allows the water to be visible through the bottle
+    water.renderOrder = 1; // allows the water to be visible through the bottle
     objects.push(water);
     scene.add(water);
     console.log(water);
-    // Load the bottle model
-    /*new GLTFLoader().load( "./water_plane.glb", function (object) {
-        // Create a water shader
-        let waterPlane = object.scene.children[0];
-
-        let water = new Water( waterPlane.geometry, {
-            color: '#88ccff',
-            scale: 1,
-            flowDirection: new THREE.Vector2( 1, 1 ),
-            textureWidth: 1024,
-            textureHeight: 1024
-        } );
-
-        //water.position.y = 1;
-        //water.rotation.x = THREE.Math.degToRad(90);
-        //water.rotation.y = THREE.Math.degToRad(180);
-        //water.scale.x = 0.65;
-        //water.scale.z = 0.55;
-        //water.renderOrder = 1; // allows the water to be visible through the bottle
-        objects.push(water);
-        scene.add(water);
-    });*/
-
-    /*const cubeTextureLoader = new THREE.CubeTextureLoader();
-    cubeTextureLoader.setPath( 'textures/cube/Park2/' );
-    const cubeTexture = cubeTextureLoader.load( [
-        "posx.jpg", "negx.jpg",
-        "posy.jpg", "negy.jpg",
-        "posz.jpg", "negz.jpg"
-    ] );
-    scene.background = cubeTexture;*/
-    /*new RGBELoader().setPath("./").load("canada_montreal_thea.hdr", function(hdrmap) {
-        // Setup environment map
-        var envmap = new PMREMGenerator(renderer).fromCubemap(hdrmap);
-        scene.environment = envmap.texture;
-        scene.background = envmap.texture;
-    });*/
-
-    /*const hemisphereRadius = 3;
-    const hemisphereWidthDetail = 20;
-    const hemisphereHeightDetail = 4;
-    const hemisphereGeometry = new THREE.SphereGeometry( hemisphereRadius, hemisphereWidthDetail, hemisphereHeightDetail, 0, Math.PI, 0, Math.PI );*/
     
-
     // Skybox
     const cubeTextureLoader = new THREE.CubeTextureLoader();
     cubeTextureLoader.setPath( './textures/cube/apartment/' );
@@ -118,10 +61,6 @@ document.addEventListener("DOMContentLoaded", () => {
     new GLTFLoader().load( "./bottle.glb", function (object) {
         // Create a glass-like material for the bottle
         let bottle = object.scene.children[0];
-        // canada_montreal_thea.hdr
-        //new RGBELoader().setPath("./").load("canada_montreal_thea.hdr", function(hdrmap) {
-            //var envmap = new PMREMGenerator(renderer).fromCubemap(hdrmap);
-            //scene.environment = envmap.texture;
         bottle.material = new THREE.MeshPhysicalMaterial({
             //color: 0xf42342,
             metalness: .4,
@@ -139,10 +78,8 @@ document.addEventListener("DOMContentLoaded", () => {
             ior: 0.9,
             side: THREE.FrontSide,
         });
-        //});
         bottle.position.x = 2.25;
         bottle.position.y = 0.5;
-        //bottle.rotation.y = THREE.Math.degToRad(180);
         bottle.renderOrder = 2;
         objects.push(bottle);
         scene.add(bottle);
