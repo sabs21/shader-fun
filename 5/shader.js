@@ -2,6 +2,7 @@ import * as THREE from "./three.module.js";
 import { OrbitControls } from './examples/jsm/controls/OrbitControls.js';
 import { Water } from './examples/jsm/objects/Water2.js';
 import { GLTFLoader } from './examples/jsm/loaders/GLTFLoader.js';
+import { MarchingCubes } from './examples/jsm/objects/MarchingCubes.js';
 //import { RGBELoader } from './examples/jsm/loaders/RGBELoader.js';
 //import { PMREMGenerator } from './src/extras/PMREMGenerator.js';
 
@@ -10,7 +11,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
     // Globals
     const objects = [];
-    //const clouds = [];
+    const balls = [];
 
     // Set the scene up
     const scene = new THREE.Scene();
@@ -26,22 +27,23 @@ document.addEventListener("DOMContentLoaded", () => {
 
     // Add water mesh
     const planeWidth = 4.8;
-    const planeHeight = 2.2;  
+    const planeHeight = 1.9;  
     const planeSegments = 48;   
     const planeGeometry = new THREE.PlaneGeometry(planeWidth, planeHeight, planeSegments, planeSegments);
     let water = new Water( planeGeometry, {
         color: '#77a6ff',
-        scale: 0.5,
+        scale: 0.4,
         reflectivity: 0.1,
         flowDirection: new THREE.Vector2( 1, 1 ),
         textureWidth: 1024,
         textureHeight: 1024,
         roundOffCenter: new THREE.Vector2(-1.35, 0),
-        roundOffRadiusX: 1.1,
-        roundOffRadiusZ: 1.1,
+        roundOffRadiusX: 0.96,
+        roundOffRadiusZ: 0.96,
     } );
     water.rotation.x = THREE.Math.degToRad(270);
-    water.position.x = -0.15;
+    water.position.x = -0.1;
+    water.position.y = -0.3;
     water.renderOrder = 1; // allows the water to be visible through the bottle
     objects.push(water);
     scene.add(water);
@@ -86,9 +88,18 @@ document.addEventListener("DOMContentLoaded", () => {
         scene.add(bottle);
     });
 
-    // Clouds
-    //const cloudGeometry = new THREE.BufferGeometry();
-    //cloudGeometry
+    // Clouds (Marching Cubes)
+    const cloudResolution = 16;
+    const cloudMaterial = new THREE.MeshPhongMaterial( { color: 0xffffff, specular: 0x111111, shininess: 1 } );
+    const totalBalls = 7;
+
+    initMarchingCubeBallSeeds(totalBalls); // Give each ball a random seed so that each ball's movement pattern differs.
+
+    const clouds = new MarchingCubes( cloudResolution, cloudMaterial, false, false );
+    clouds.position.set( 0.2, 1.2, 0 );
+    clouds.scale.set( 2.7, 1, 1 );
+
+    scene.add( clouds );
 
     // Setup a directional light
     const lightColor = 0xffffff;
@@ -135,8 +146,20 @@ document.addEventListener("DOMContentLoaded", () => {
             camera.updateProjectionMatrix();
         }
 
+        updateCubes(clouds, balls, time);
+
         renderer.render( scene, camera );
     };
+
+    function initMarchingCubeBallSeeds(totalBalls) {
+        for (let i = 0; i < totalBalls; i++) {
+            balls[i] = {
+                x: Math.random(),
+                y: Math.random()/10 + 0.5,
+                z: Math.random()/2 + 0.25
+            }
+        }
+    }
 
     function initRenderer() {
         var renderer = new THREE.WebGLRenderer({
@@ -164,5 +187,26 @@ document.addEventListener("DOMContentLoaded", () => {
           renderer.setSize(width, height, false);
         }
         return needResize;
+    }
+
+    // this controls content of marching cubes voxel field
+    function updateCubes( object, balls, time) {
+
+        object.reset();
+
+        // fill the field with some metaballs
+        const subtract = 12;
+        const strength = 1.2 / ( ( Math.sqrt( balls.length ) - 1 ) / 4 + 1 );
+
+        for ( let i = 0; i < balls.length; i++ ) {
+
+            const ballx = ((time * 0.1) + balls[i].x - 0.99) % 1;
+            const bally = Math.sin(time)*0.02 + balls[i].y;
+            const ballz = balls[i].z; 
+
+            object.addBall( ballx, bally, ballz, strength, subtract );
+
+        }
+
     }
 });

@@ -453,7 +453,7 @@ Water.WaterShader = {
 			// Find point on the curve using theta
 			vec2 curvePoint = vec2(roundOffRadiusX*cos(theta), roundOffRadiusZ*sin(theta));
 			// Check if the original point is beyond this point on the curve.
-			bool isBeyond = abs(worldPosition.z) < curvePoint.x || abs(worldPosition.z) > abs(curvePoint.y);
+			bool isBeyond = abs(unitVector.x) > abs(curvePoint.x) || abs(unitVector.y) > abs(curvePoint.y);
 			// Make sure that only the positive y hemisphere is checked
 			bool xIsNegative = unitVector.x < 0.0;
 			// If the point is beyond the curve point, remove it.
