@@ -10,6 +10,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
     // Globals
     const objects = [];
+    //const clouds = [];
 
     // Set the scene up
     const scene = new THREE.Scene();
@@ -26,7 +27,7 @@ document.addEventListener("DOMContentLoaded", () => {
     // Add water mesh
     const planeWidth = 4.8;
     const planeHeight = 2.2;  
-    const planeSegments = 64;   
+    const planeSegments = 48;   
     const planeGeometry = new THREE.PlaneGeometry(planeWidth, planeHeight, planeSegments, planeSegments);
     let water = new Water( planeGeometry, {
         color: '#77a6ff',
@@ -84,6 +85,10 @@ document.addEventListener("DOMContentLoaded", () => {
         objects.push(bottle);
         scene.add(bottle);
     });
+
+    // Clouds
+    //const cloudGeometry = new THREE.BufferGeometry();
+    //cloudGeometry
 
     // Setup a directional light
     const lightColor = 0xffffff;
