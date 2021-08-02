@@ -432,15 +432,16 @@ Water.WaterShader = {
 			vec3 toEye = normalize( vToEye );
 
 			// Round off the corners near the front of the bottle
-			vec2 unitVector = vec2(worldPosition.x - roundOffCenter.x, worldPosition.z - roundOffCenter.y);
+			// This is the worldPosition point moved along with the center of the circle.
+			vec2 correctedPoint = vec2((worldPosition.x - roundOffCenter.x)*roundOffRadiusX, (worldPosition.z - roundOffCenter.y)*roundOffRadiusZ);
 			// Find theta.
 			float theta = 0.0;
-			if (unitVector.x == 0.0 && unitVector.y == 0.0) {
+			if (correctedPoint.x == 0.0 && correctedPoint.y == 0.0) {
 				theta = 0.0;
 			}
-			else if (unitVector.x == 0.0) {
+			else if (correctedPoint.x == 0.0) {
 				// Account for edge cases where x is 0
-				if (unitVector.y > 0.0) {
+				if (correctedPoint.y > 0.0) {
 					theta = PI/2.0;
 				}
 				else {
@@ -448,14 +449,14 @@ Water.WaterShader = {
 				}
 			}
 			else {
-				theta = atan(unitVector.y, unitVector.x);
+				theta = atan(correctedPoint.y, correctedPoint.x);
 			}
 			// Find point on the curve using theta
 			vec2 curvePoint = vec2(roundOffRadiusX*cos(theta), roundOffRadiusZ*sin(theta));
 			// Check if the original point is beyond this point on the curve.
-			bool isBeyond = abs(unitVector.x) > abs(curvePoint.x) || abs(unitVector.y) > abs(curvePoint.y);
+			bool isBeyond = abs(correctedPoint.x) > abs(curvePoint.x) || abs(correctedPoint.y) > abs(curvePoint.y);
 			// Make sure that only the positive y hemisphere is checked
-			bool xIsNegative = unitVector.x < 0.0;
+			bool xIsNegative = correctedPoint.x < 0.0;
 			// If the point is beyond the curve point, remove it.
 			if (xIsNegative && isBeyond) {
 				discard;

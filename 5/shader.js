@@ -37,9 +37,9 @@ document.addEventListener("DOMContentLoaded", () => {
         flowDirection: new THREE.Vector2( 1, 1 ),
         textureWidth: 1024,
         textureHeight: 1024,
-        roundOffCenter: new THREE.Vector2(-1.35, 0),
+        roundOffCenter: new THREE.Vector2(-1.65, 0),
         roundOffRadiusX: 0.96,
-        roundOffRadiusZ: 0.96,
+        roundOffRadiusZ: 0.6,
     } );
     water.rotation.x = THREE.Math.degToRad(270);
     water.position.x = -0.1;
