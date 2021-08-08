@@ -12,6 +12,9 @@ document.addEventListener("DOMContentLoaded", () => {
     // Globals
     const objects = [];
     const balls = [];
+    let canvasDimensions = getElemDimensions(threeDisplay);
+    let cameraX = 0;
+    let cameraY = 0;
 
     // Set the scene up
     const scene = new THREE.Scene();
@@ -22,8 +25,16 @@ document.addEventListener("DOMContentLoaded", () => {
     const near = 0.1;
     const far = 100;
     const camera = new THREE.PerspectiveCamera(fov, aspect, near, far);
-    camera.position.set(0, 1, 4);
+    const startX = -5;
+    const startY = 1;
+    const startZ = -6;
+    camera.position.set(startX, startY, startZ);
     camera.lookAt(scene.position);
+
+    threeDisplay.addEventListener("mousemove", (e) => {
+        cameraX = startX + (e.clientX/canvasDimensions.width) - 0.5;
+        cameraY = startY + ((e.clientY/canvasDimensions.height)*0.25) - 0.2;
+    });
 
     // Add water mesh
     const planeWidth = 4.8;
@@ -158,6 +169,10 @@ document.addEventListener("DOMContentLoaded", () => {
         requestAnimationFrame(animate);
         time *= 0.001; // Convert time to seconds.
 
+        // Mouse slightly moves the camera
+        camera.position.x = cameraX;
+        camera.position.y = cameraY;
+
         // if the canvas's css dimensions and renderer resolution differs, resize the renderer to prevent blockiness.
         if (resizeRendererToDisplaySize(renderer)) {
             // Fix distortions when canvas gets resized
@@ -171,6 +186,15 @@ document.addEventListener("DOMContentLoaded", () => {
 
         renderer.render( scene, camera );
     };
+
+    // Get the dimensions of a DOM element
+    function getElemDimensions(elem) {
+        var rect = elem.getBoundingClientRect();
+        return {
+            width: parseInt(rect.width),
+            height: parseInt(rect.height)
+        }
+    }
 
     function initMarchingCubeBallSeeds(totalBalls) {
         for (let i = 0; i < totalBalls; i++) {
