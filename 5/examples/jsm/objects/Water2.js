@@ -378,7 +378,7 @@ Water.WaterShader = {
 			vCoord = textureMatrix * vec4( position , 1.0 );
 
 			worldPosition = modelMatrix * vec4( position, 1.0 );
-			worldPosition.y += snoise(position.xy + time) / 20.0;
+			worldPosition.y += snoise(position.xy + (time/2.0)) / 16.0;
 			vToEye = cameraPosition - worldPosition.xyz;
 
 			vec4 mvPosition =  viewMatrix * worldPosition; // used in fog_vertex

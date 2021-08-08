@@ -17,7 +17,7 @@ document.addEventListener("DOMContentLoaded", () => {
     const scene = new THREE.Scene();
 
     // Set the camera up
-    const fov = 45;
+    const fov = 30;
     const aspect = 2;  // the canvas default
     const near = 0.1;
     const far = 100;
@@ -79,7 +79,7 @@ document.addEventListener("DOMContentLoaded", () => {
             reflectivity: 0.2,
             refractionRatio: 0.985,
             ior: 0.9,
-            side: THREE.FrontSide,
+            side: THREE.DoubleSide,
         });
         bottle.position.x = 2.25;
         bottle.position.y = 0.5;
@@ -88,18 +88,36 @@ document.addEventListener("DOMContentLoaded", () => {
         scene.add(bottle);
     });
 
+     // Load the bottle holder model
+     new GLTFLoader().load( "./holder.glb", function (object) {
+        let bottleHolder = object.scene;
+        bottleHolder.position.x = 0.3;
+        bottleHolder.position.y = -1.313;
+        objects.push(bottleHolder);
+        scene.add(bottleHolder);
+    });
+
     // Clouds (Marching Cubes)
     const cloudResolution = 16;
     const cloudMaterial = new THREE.MeshPhongMaterial( { color: 0xffffff, specular: 0x111111, shininess: 1 } );
     const totalBalls = 7;
-
     initMarchingCubeBallSeeds(totalBalls); // Give each ball a random seed so that each ball's movement pattern differs.
-
     const clouds = new MarchingCubes( cloudResolution, cloudMaterial, false, false );
     clouds.position.set( 0.2, 1.2, 0 );
     clouds.scale.set( 2.7, 1, 1 );
-
     scene.add( clouds );
+
+    // Load the ship model
+    new GLTFLoader().load( "./ship.glb", function (object) {
+        let ship = object.scene;
+        ship.scale.x = 0.06;
+        ship.scale.y = 0.06;
+        ship.scale.z = 0.06;
+        ship.position.y = -0.4;
+        ship.rotation.y = THREE.Math.degToRad(270);
+        objects.push(ship);
+        scene.add(ship);
+    });
 
     // Setup a directional light
     const lightColor = 0xffffff;
@@ -116,6 +134,8 @@ document.addEventListener("DOMContentLoaded", () => {
     const controls = new OrbitControls( camera, renderer.domElement );
     controls.minDistance = 3;
     controls.maxDistance = 50;
+
+    console.log("objects", objects);
 
     animate();
 
@@ -147,6 +167,7 @@ document.addEventListener("DOMContentLoaded", () => {
         }
 
         updateCubes(clouds, balls, time);
+        rockTheBoat(objects[2], time);
 
         renderer.render( scene, camera );
     };
@@ -187,6 +208,14 @@ document.addEventListener("DOMContentLoaded", () => {
           renderer.setSize(width, height, false);
         }
         return needResize;
+    }
+
+    function rockTheBoat(ship, time) {
+        if (ship) {
+            ship.rotation.x = Math.sin(time) * 0.15;
+            ship.rotation.y = (Math.cos(time) * 0.05) + THREE.Math.degToRad(270);
+            ship.position.y = (Math.cos(time) * 0.02) - 0.4;
+        }
     }
 
     // this controls content of marching cubes voxel field
