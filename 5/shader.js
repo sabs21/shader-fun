@@ -26,7 +26,7 @@ document.addEventListener("DOMContentLoaded", () => {
     const far = 100;
     const camera = new THREE.PerspectiveCamera(fov, aspect, near, far);
     const startX = -5;
-    const startY = 1;
+    const startY = 0.4;
     const startZ = -6;
     camera.position.set(startX, startY, startZ);
     camera.lookAt(scene.position);
@@ -58,7 +58,7 @@ document.addEventListener("DOMContentLoaded", () => {
     water.renderOrder = 1; // allows the water to be visible through the bottle
     objects.push(water);
     scene.add(water);
-    console.log(water);
+    //console.log(water);
     
     // Skybox
     const cubeTextureLoader = new THREE.CubeTextureLoader();
@@ -70,6 +70,26 @@ document.addEventListener("DOMContentLoaded", () => {
     ] );
     scene.environment = cubeTexture;
     scene.background = cubeTexture;
+
+    // Add the table top
+    let tableGeometry = new THREE.PlaneGeometry(40, 30, 1, 1);
+    let tableTexture = new THREE.TextureLoader().load("table3_texture.jpg");
+    tableTexture.wrapS = THREE.RepeatWrapping;
+    tableTexture.wrapT = THREE.RepeatWrapping;
+    tableTexture.repeat.set( 20, 20 );
+    let tableNormal = new THREE.TextureLoader().load("table3_normal.png");
+    tableNormal.wrapS = THREE.RepeatWrapping;
+    tableNormal.wrapT = THREE.RepeatWrapping;
+    tableNormal.repeat.set( 20, 20 );
+    let tableMaterial = new THREE.MeshPhongMaterial({
+        normalMap: tableNormal,
+        map: tableTexture,
+    });
+    let table = new THREE.Mesh(tableGeometry, tableMaterial);
+    table.position.y = -1.4;
+    table.rotation.x = THREE.Math.degToRad(270);
+    objects.push(table);
+    scene.add(table);
     
     // Load the bottle model
     new GLTFLoader().load( "./bottle.glb", function (object) {
@@ -104,6 +124,7 @@ document.addEventListener("DOMContentLoaded", () => {
         let bottleHolder = object.scene;
         bottleHolder.position.x = 0.3;
         bottleHolder.position.y = -1.313;
+        bottleHolder.castShadow = true;
         objects.push(bottleHolder);
         scene.add(bottleHolder);
     });
@@ -130,9 +151,47 @@ document.addEventListener("DOMContentLoaded", () => {
         scene.add(ship);
     });
 
+    new GLTFLoader().load( "./lamp.glb", function (object) {
+        let lamp = object.scene;
+        lamp.scale.x = 2;
+        lamp.scale.y = 2;
+        lamp.scale.z = 2;
+        lamp.position.x = 9;
+        lamp.position.y = -1.313;
+        lamp.position.z = 11;
+        lamp.rotation.y = THREE.Math.degToRad(200);
+        objects.push(lamp);
+        scene.add(lamp);
+    });
+
+    // Setup lamp spotlight
+    let lampSpotLight = new THREE.SpotLight( 0xffddaa );
+    let bulbGeometry = new THREE.SphereGeometry( 0.3, 16, 8 );
+    let bulbMaterial = new THREE.MeshBasicMaterial({
+        //emissive: 0xffffee,
+        //emissiveIntensity: 1,
+        color: 0xffffff
+    });
+    lampSpotLight.add( new THREE.Mesh(bulbGeometry, bulbMaterial) );
+    lampSpotLight.position.set(5.3, 3.6, 11.3);
+    lampSpotLight.intensity = 80;
+    lampSpotLight.angle = Math.PI / 4;
+    lampSpotLight.penumbra = 0.2;
+    lampSpotLight.decay = 1;
+    lampSpotLight.distance = 40;
+    //lampSpotLight.castShadow = true;
+    scene.add(lampSpotLight);
+
+    // Setup lamp point light (make the lamp glow)
+    let lampPointLight = new THREE.SpotLight( 0xffddaa );
+    lampPointLight.position.set(5.5, 3.6, 12);
+    lampPointLight.intensity = 40;
+    lampPointLight.distance = 3;
+    scene.add(lampPointLight);
+
     // Setup a directional light
     const lightColor = 0xffffff;
-    const lightIntensity = 1.0;
+    const lightIntensity = 1;
     const light = new THREE.DirectionalLight( lightColor, lightIntensity );
     light.position.set(-0.2, 1, -0.6);
     scene.add(light);
@@ -144,7 +203,7 @@ document.addEventListener("DOMContentLoaded", () => {
     // Orbit controls
     const controls = new OrbitControls( camera, renderer.domElement );
     controls.minDistance = 3;
-    controls.maxDistance = 50;
+    controls.maxDistance = 10;
 
     console.log("objects", objects);
 
@@ -170,8 +229,8 @@ document.addEventListener("DOMContentLoaded", () => {
         time *= 0.001; // Convert time to seconds.
 
         // Mouse slightly moves the camera
-        camera.position.x = cameraX;
-        camera.position.y = cameraY;
+        //camera.position.x = cameraX;
+        //camera.position.y = cameraY;
 
         // if the canvas's css dimensions and renderer resolution differs, resize the renderer to prevent blockiness.
         if (resizeRendererToDisplaySize(renderer)) {
@@ -182,7 +241,7 @@ document.addEventListener("DOMContentLoaded", () => {
         }
 
         updateCubes(clouds, balls, time);
-        rockTheBoat(objects[2], time);
+        rockTheBoat(objects[4], time);
 
         renderer.render( scene, camera );
     };
@@ -213,7 +272,9 @@ document.addEventListener("DOMContentLoaded", () => {
             precision: "mediump"
         });
         renderer.setClearColor( 0x000000, 0);
+        renderer.physicallyCorrectLights = true;
         renderer.shadowMap.enabled = true;
+        renderer.shadowMap.type = THREE.PCFSoftShadowMap;
         renderer.outputEncoding = THREE.sRGBEncoding;
         renderer.toneMapping = THREE.ACESFilmicToneMapping;
         renderer.toneMappingExposure = 0.8;
