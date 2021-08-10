@@ -12,6 +12,7 @@ document.addEventListener("DOMContentLoaded", () => {
     // Globals
     const objects = [];
     const balls = [];
+    const lightMapIntensity = 4;
     let canvasDimensions = getElemDimensions(threeDisplay);
     let cameraX = 0;
     let cameraY = 0;
@@ -72,22 +73,28 @@ document.addEventListener("DOMContentLoaded", () => {
     scene.background = cubeTexture;
 
     // Add the table top
-    let tableGeometry = new THREE.PlaneGeometry(40, 30, 1, 1);
-    let tableTexture = new THREE.TextureLoader().load("table3_texture.jpg");
-    tableTexture.wrapS = THREE.RepeatWrapping;
+    let tableGeometry = new THREE.PlaneGeometry(30, 30, 1, 1);
+    let tableUVArr = tableGeometry.getAttribute("uv").array; 
+    tableGeometry.setAttribute('uv2', new THREE.BufferAttribute( tableUVArr, 2 )); // create another uv map for the lightmap to use.
+    let tableTexture = new THREE.TextureLoader().load("table_diffuse.jpg");
+    let bakedTableTexture = new THREE.TextureLoader().load("table_lightmap.png");
+    /*tableTexture.wrapS = THREE.RepeatWrapping;
     tableTexture.wrapT = THREE.RepeatWrapping;
     tableTexture.repeat.set( 20, 20 );
     let tableNormal = new THREE.TextureLoader().load("table3_normal.png");
     tableNormal.wrapS = THREE.RepeatWrapping;
     tableNormal.wrapT = THREE.RepeatWrapping;
-    tableNormal.repeat.set( 20, 20 );
+    tableNormal.repeat.set( 20, 20 );*/
     let tableMaterial = new THREE.MeshPhongMaterial({
-        normalMap: tableNormal,
         map: tableTexture,
+        lightMap: bakedTableTexture,
+        lightMapIntensity: lightMapIntensity,
     });
     let table = new THREE.Mesh(tableGeometry, tableMaterial);
+
     table.position.y = -1.4;
     table.rotation.x = THREE.Math.degToRad(270);
+    table.rotation.z = THREE.Math.degToRad(270);
     objects.push(table);
     scene.add(table);
     
@@ -119,19 +126,38 @@ document.addEventListener("DOMContentLoaded", () => {
         scene.add(bottle);
     });
 
-     // Load the bottle holder model
-     new GLTFLoader().load( "./holder.glb", function (object) {
+    // Load the bottle holder model
+    let holderTexture = new THREE.TextureLoader().load("holder_diffuse.jpg");
+    let holderNormal = new THREE.TextureLoader().load("holder_normal.png");
+    let bakedHolderTexture = new THREE.TextureLoader().load("holder_lightmap.png");
+    bakedHolderTexture.flipY = false; // glTF has a different texture transform than the three.js default. If you’re loading the texture separately try setting texture.flipY = false
+    new GLTFLoader().load( "./holder.glb", function (object) {
         let bottleHolder = object.scene;
-        bottleHolder.position.x = 0.3;
-        bottleHolder.position.y = -1.313;
-        bottleHolder.castShadow = true;
-        objects.push(bottleHolder);
-        scene.add(bottleHolder);
+        //console.log(object);
+        let bottleHolderGeometry = bottleHolder.children[0].geometry;
+        //let holderUVArr = bottleHolderGeometry.getAttribute("uv").array;
+        //bottleHolderGeometry.setAttribute('uv2', new THREE.BufferAttribute( holderUVArr, 2 ));
+        //bottleHolder.castShadow = true;
+        bottleHolder.material = new THREE.MeshPhongMaterial({
+            map: holderTexture,
+            normalMap: holderNormal,
+            lightMap: bakedHolderTexture,
+            lightMapIntensity: lightMapIntensity,
+        });
+
+        let holder = new THREE.Mesh(bottleHolderGeometry, bottleHolder.material);
+        holder.position.x = 0.27;
+        holder.position.y = -1.4;
+        holder.position.z = 0.06;
+        //bottleHolder.material.lightMap = bakedHolderTexture;
+        //bottleHolder.material.lightMapIntensity = lightMapIntensity;
+        objects.push(holder);
+        scene.add(holder);
     });
 
     // Clouds (Marching Cubes)
     const cloudResolution = 16;
-    const cloudMaterial = new THREE.MeshPhongMaterial( { color: 0xffffff, specular: 0x111111, shininess: 1 } );
+    const cloudMaterial = new THREE.MeshPhongMaterial( { color: 0xffffff, specular: 0x111111, shininess: 1, emissive: 0xffffff, emissiveIntensity: 0.15 } );
     const totalBalls = 7;
     initMarchingCubeBallSeeds(totalBalls); // Give each ball a random seed so that each ball's movement pattern differs.
     const clouds = new MarchingCubes( cloudResolution, cloudMaterial, false, false );
@@ -140,15 +166,31 @@ document.addEventListener("DOMContentLoaded", () => {
     scene.add( clouds );
 
     // Load the ship model
+    let shipTexture = new THREE.TextureLoader().load("ship_diffuse.png");
+    shipTexture.flipY = false;
+    let bakedShipTexture = new THREE.TextureLoader().load("ship_lightmap.png");
+    bakedShipTexture.flipY = false;
     new GLTFLoader().load( "./ship.glb", function (object) {
         let ship = object.scene;
-        ship.scale.x = 0.06;
-        ship.scale.y = 0.06;
-        ship.scale.z = 0.06;
-        ship.position.y = -0.4;
-        ship.rotation.y = THREE.Math.degToRad(270);
-        objects.push(ship);
-        scene.add(ship);
+        console.log(ship);
+
+        let shipGeometry = ship.children[0].geometry;
+        let shipUVArr = shipGeometry.getAttribute("uv").array;
+        shipGeometry.setAttribute('uv2', new THREE.BufferAttribute( shipUVArr, 2 ));
+
+        ship.material = new THREE.MeshPhongMaterial({
+            map: shipTexture,
+            lightMap: bakedShipTexture,
+            lightMapIntensity: lightMapIntensity,
+        });
+        let bakedShip = new THREE.Mesh(shipGeometry, ship.material);
+        bakedShip.scale.x = 0.06;
+        bakedShip.scale.y = 0.06;
+        bakedShip.scale.z = 0.06;
+        bakedShip.position.y = -0.35;
+        bakedShip.rotation.y = THREE.Math.degToRad(270);
+        objects.push(bakedShip);
+        scene.add(bakedShip);
     });
 
     new GLTFLoader().load( "./lamp.glb", function (object) {
@@ -156,29 +198,29 @@ document.addEventListener("DOMContentLoaded", () => {
         lamp.scale.x = 2;
         lamp.scale.y = 2;
         lamp.scale.z = 2;
-        lamp.position.x = 9;
+        lamp.position.x = 8.95;
         lamp.position.y = -1.313;
         lamp.position.z = 11;
-        lamp.rotation.y = THREE.Math.degToRad(200);
+        lamp.rotation.y = THREE.Math.degToRad(204);
         objects.push(lamp);
         scene.add(lamp);
     });
 
     // Setup lamp spotlight
-    let lampSpotLight = new THREE.SpotLight( 0xffddaa );
+    //let lampSpotLight = new THREE.SpotLight( 0xffddaa );
     let bulbGeometry = new THREE.SphereGeometry( 0.3, 16, 8 );
     let bulbMaterial = new THREE.MeshBasicMaterial({
         //emissive: 0xffffee,
         //emissiveIntensity: 1,
         color: 0xffffff
     });
-    lampSpotLight.add( new THREE.Mesh(bulbGeometry, bulbMaterial) );
-    lampSpotLight.position.set(5.3, 3.6, 11.3);
-    lampSpotLight.intensity = 80;
-    lampSpotLight.angle = Math.PI / 4;
-    lampSpotLight.penumbra = 0.2;
-    lampSpotLight.decay = 1;
-    lampSpotLight.distance = 40;
+    let lampSpotLight = new THREE.Mesh(bulbGeometry, bulbMaterial);
+    lampSpotLight.position.set(5.36, 3.63, 11.84);
+    //lampSpotLight.intensity = 80;
+    //lampSpotLight.angle = Math.PI / 4;
+    //lampSpotLight.penumbra = 0.2;
+    //lampSpotLight.decay = 1;
+    //lampSpotLight.distance = 40;
     //lampSpotLight.castShadow = true;
     scene.add(lampSpotLight);
 
@@ -208,21 +250,6 @@ document.addEventListener("DOMContentLoaded", () => {
     console.log("objects", objects);
 
     animate();
-
-    // Position and rotation are 3 element arrays which holds x, y, and z respectively.
-    // Rotation takes degrees.
-    function addObject(object, position, rotation) {
-        object.position.x = position[0];
-        object.position.y = position[1];
-        object.position.z = position[2];
-
-        object.rotation.x = THREE.Math.degToRad(rotation[0]);
-        object.rotation.y = THREE.Math.degToRad(rotation[1]);
-        object.rotation.z = THREE.Math.degToRad(rotation[2]);
-
-        scene.add(obj);
-        objects.push(obj);
-    }
     
     function animate (time) {
         requestAnimationFrame(animate);
@@ -299,7 +326,7 @@ document.addEventListener("DOMContentLoaded", () => {
         if (ship) {
             ship.rotation.x = Math.sin(time) * 0.15;
             ship.rotation.y = (Math.cos(time) * 0.05) + THREE.Math.degToRad(270);
-            ship.position.y = (Math.cos(time) * 0.02) - 0.4;
+            ship.position.y = (Math.cos(time) * 0.02) - 0.35;
         }
     }
 
