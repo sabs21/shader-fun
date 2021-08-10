@@ -3,6 +3,7 @@ import { OrbitControls } from './examples/jsm/controls/OrbitControls.js';
 import { Water } from './examples/jsm/objects/Water2.js';
 import { GLTFLoader } from './examples/jsm/loaders/GLTFLoader.js';
 import { MarchingCubes } from './examples/jsm/objects/MarchingCubes.js';
+import { Reflector } from './examples/jsm/objects/Reflector.js';
 //import { RGBELoader } from './examples/jsm/loaders/RGBELoader.js';
 //import { PMREMGenerator } from './src/extras/PMREMGenerator.js';
 
@@ -76,18 +77,18 @@ document.addEventListener("DOMContentLoaded", () => {
     let tableGeometry = new THREE.PlaneGeometry(30, 30, 1, 1);
     let tableUVArr = tableGeometry.getAttribute("uv").array; 
     tableGeometry.setAttribute('uv2', new THREE.BufferAttribute( tableUVArr, 2 )); // create another uv map for the lightmap to use.
-    let tableTexture = new THREE.TextureLoader().load("table_diffuse.jpg");
-    let bakedTableTexture = new THREE.TextureLoader().load("table_lightmap.png");
-    /*tableTexture.wrapS = THREE.RepeatWrapping;
-    tableTexture.wrapT = THREE.RepeatWrapping;
-    tableTexture.repeat.set( 20, 20 );
+    let tableDiffuse = new THREE.TextureLoader().load("table_diffuse.jpg");
+    let tableLightmap = new THREE.TextureLoader().load("table_lightmap.png");
+    /*tableDiffuse.wrapS = THREE.RepeatWrapping;
+    tableDiffuse.wrapT = THREE.RepeatWrapping;
+    tableDiffuse.repeat.set( 20, 20 );
     let tableNormal = new THREE.TextureLoader().load("table3_normal.png");
     tableNormal.wrapS = THREE.RepeatWrapping;
     tableNormal.wrapT = THREE.RepeatWrapping;
     tableNormal.repeat.set( 20, 20 );*/
     let tableMaterial = new THREE.MeshPhongMaterial({
-        map: tableTexture,
-        lightMap: bakedTableTexture,
+        map: tableDiffuse,
+        lightMap: tableLightmap,
         lightMapIntensity: lightMapIntensity,
     });
     let table = new THREE.Mesh(tableGeometry, tableMaterial);
@@ -106,6 +107,8 @@ document.addEventListener("DOMContentLoaded", () => {
             //color: 0xf42342,
             metalness: .4,
             roughness: .0,
+            emissive: 0xffecab,
+            emissiveIntensity: 0.2,
             //envMap: envmap.texture,
             envMapIntensity: 1.0,
             clearcoat: 0.9,
@@ -165,22 +168,51 @@ document.addEventListener("DOMContentLoaded", () => {
     clouds.scale.set( 2.7, 1, 1 );
     scene.add( clouds );
 
+    let lampDiffuse = new THREE.TextureLoader().load("lamp_diffuse.png");
+    lampDiffuse.flipY = false;
+    let lampLightmap = new THREE.TextureLoader().load("lamp_lightmap.png");
+    lampLightmap.flipY = false;
+    new GLTFLoader().load( "./lamp.glb", function (object) {
+        let lamp = object.scene;
+        //console.log(lamp);
+
+        let lampGeometry = lamp.children[0].geometry;
+        let lampUVArr = lampGeometry.getAttribute("uv").array;
+        lampGeometry.setAttribute('uv2', new THREE.BufferAttribute( lampUVArr, 2 ));
+
+        lamp.material = new THREE.MeshPhongMaterial({
+            map: lampDiffuse,
+            lightMap: lampLightmap,
+            lightMapIntensity: lightMapIntensity,
+        });
+        let bakedLamp = new THREE.Mesh(lampGeometry, lamp.material);
+        bakedLamp.scale.x = 2;
+        bakedLamp.scale.y = 2;
+        bakedLamp.scale.z = 2;
+        bakedLamp.position.x = 8.95;
+        bakedLamp.position.y = -1.313;
+        bakedLamp.position.z = 11;
+        bakedLamp.rotation.y = THREE.Math.degToRad(204);
+        objects.push(bakedLamp);
+        scene.add(bakedLamp);
+    });
+
     // Load the ship model
-    let shipTexture = new THREE.TextureLoader().load("ship_diffuse.png");
-    shipTexture.flipY = false;
-    let bakedShipTexture = new THREE.TextureLoader().load("ship_lightmap.png");
-    bakedShipTexture.flipY = false;
+    let shipDiffuse = new THREE.TextureLoader().load("ship_diffuse.png");
+    shipDiffuse.flipY = false;
+    let shipLightmap = new THREE.TextureLoader().load("ship_lightmap.png");
+    shipLightmap.flipY = false;
     new GLTFLoader().load( "./ship.glb", function (object) {
         let ship = object.scene;
-        console.log(ship);
+        //console.log(ship);
 
         let shipGeometry = ship.children[0].geometry;
         let shipUVArr = shipGeometry.getAttribute("uv").array;
         shipGeometry.setAttribute('uv2', new THREE.BufferAttribute( shipUVArr, 2 ));
 
         ship.material = new THREE.MeshPhongMaterial({
-            map: shipTexture,
-            lightMap: bakedShipTexture,
+            map: shipDiffuse,
+            lightMap: shipLightmap,
             lightMapIntensity: lightMapIntensity,
         });
         let bakedShip = new THREE.Mesh(shipGeometry, ship.material);
@@ -193,43 +225,30 @@ document.addEventListener("DOMContentLoaded", () => {
         scene.add(bakedShip);
     });
 
-    new GLTFLoader().load( "./lamp.glb", function (object) {
-        let lamp = object.scene;
-        lamp.scale.x = 2;
-        lamp.scale.y = 2;
-        lamp.scale.z = 2;
-        lamp.position.x = 8.95;
-        lamp.position.y = -1.313;
-        lamp.position.z = 11;
-        lamp.rotation.y = THREE.Math.degToRad(204);
-        objects.push(lamp);
-        scene.add(lamp);
-    });
-
     // Setup lamp spotlight
     //let lampSpotLight = new THREE.SpotLight( 0xffddaa );
-    let bulbGeometry = new THREE.SphereGeometry( 0.3, 16, 8 );
-    let bulbMaterial = new THREE.MeshBasicMaterial({
-        //emissive: 0xffffee,
-        //emissiveIntensity: 1,
-        color: 0xffffff
-    });
-    let lampSpotLight = new THREE.Mesh(bulbGeometry, bulbMaterial);
-    lampSpotLight.position.set(5.36, 3.63, 11.84);
+    //let bulbGeometry = new THREE.SphereGeometry( 0.3, 16, 8 );
+    //let bulbMaterial = new THREE.MeshBasicMaterial({
+    //    emissive: 0xffffff,
+    //    emissiveIntensity: 1,
+    //    color: 0xffffff
+    //});
+    //let lampSpotLight = new THREE.Mesh(bulbGeometry, bulbMaterial);
+    //lampSpotLight.position.set(5.36, 3.63, 11.84);
     //lampSpotLight.intensity = 80;
     //lampSpotLight.angle = Math.PI / 4;
     //lampSpotLight.penumbra = 0.2;
     //lampSpotLight.decay = 1;
     //lampSpotLight.distance = 40;
     //lampSpotLight.castShadow = true;
-    scene.add(lampSpotLight);
+    //scene.add(lampSpotLight);
 
     // Setup lamp point light (make the lamp glow)
-    let lampPointLight = new THREE.SpotLight( 0xffddaa );
-    lampPointLight.position.set(5.5, 3.6, 12);
-    lampPointLight.intensity = 40;
-    lampPointLight.distance = 3;
-    scene.add(lampPointLight);
+    //let lampPointLight = new THREE.SpotLight( 0xffddaa );
+    //lampPointLight.position.set(5.5, 3.6, 12);
+    //lampPointLight.intensity = 40;
+    //lampPointLight.distance = 3;
+    //scene.add(lampPointLight);
 
     // Setup a directional light
     const lightColor = 0xffffff;
@@ -268,7 +287,7 @@ document.addEventListener("DOMContentLoaded", () => {
         }
 
         updateCubes(clouds, balls, time);
-        rockTheBoat(objects[4], time);
+        rockTheBoat(objects[5], time);
 
         renderer.render( scene, camera );
     };
