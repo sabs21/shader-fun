@@ -3,7 +3,7 @@ import { OrbitControls } from './examples/jsm/controls/OrbitControls.js';
 import { Water } from './examples/jsm/objects/Water2.js';
 import { GLTFLoader } from './examples/jsm/loaders/GLTFLoader.js';
 import { MarchingCubes } from './examples/jsm/objects/MarchingCubes.js';
-import { Reflector } from './examples/jsm/objects/Reflector.js';
+
 //import { RGBELoader } from './examples/jsm/loaders/RGBELoader.js';
 //import { PMREMGenerator } from './src/extras/PMREMGenerator.js';
 
@@ -79,14 +79,9 @@ document.addEventListener("DOMContentLoaded", () => {
     tableGeometry.setAttribute('uv2', new THREE.BufferAttribute( tableUVArr, 2 )); // create another uv map for the lightmap to use.
     let tableDiffuse = new THREE.TextureLoader().load("table_diffuse.jpg");
     let tableLightmap = new THREE.TextureLoader().load("table_lightmap.png");
-    /*tableDiffuse.wrapS = THREE.RepeatWrapping;
-    tableDiffuse.wrapT = THREE.RepeatWrapping;
-    tableDiffuse.repeat.set( 20, 20 );
-    let tableNormal = new THREE.TextureLoader().load("table3_normal.png");
-    tableNormal.wrapS = THREE.RepeatWrapping;
-    tableNormal.wrapT = THREE.RepeatWrapping;
-    tableNormal.repeat.set( 20, 20 );*/
     let tableMaterial = new THREE.MeshPhongMaterial({
+        emissive: 0xffecab,
+        emissiveIntensity: 0.2,
         map: tableDiffuse,
         lightMap: tableLightmap,
         lightMapIntensity: lightMapIntensity,
@@ -130,10 +125,10 @@ document.addEventListener("DOMContentLoaded", () => {
     });
 
     // Load the bottle holder model
-    let holderTexture = new THREE.TextureLoader().load("holder_diffuse.jpg");
-    let holderNormal = new THREE.TextureLoader().load("holder_normal.png");
-    let bakedHolderTexture = new THREE.TextureLoader().load("holder_lightmap.png");
-    bakedHolderTexture.flipY = false; // glTF has a different texture transform than the three.js default. If you’re loading the texture separately try setting texture.flipY = false
+    let holderDiffuse = new THREE.TextureLoader().load("holder_diffuse.jpg");
+    //let holderNormal = new THREE.TextureLoader().load("holder_normal.png");
+    let holderLightmap = new THREE.TextureLoader().load("holder_lightmap.png");
+    holderLightmap.flipY = false; // glTF has a different texture transform than the three.js default. If you’re loading the texture separately try setting texture.flipY = false
     new GLTFLoader().load( "./holder.glb", function (object) {
         let bottleHolder = object.scene;
         //console.log(object);
@@ -142,9 +137,9 @@ document.addEventListener("DOMContentLoaded", () => {
         //bottleHolderGeometry.setAttribute('uv2', new THREE.BufferAttribute( holderUVArr, 2 ));
         //bottleHolder.castShadow = true;
         bottleHolder.material = new THREE.MeshPhongMaterial({
-            map: holderTexture,
-            normalMap: holderNormal,
-            lightMap: bakedHolderTexture,
+            map: holderDiffuse,
+            //normalMap: holderNormal,
+            lightMap: holderLightmap,
             lightMapIntensity: lightMapIntensity,
         });
 
@@ -152,15 +147,19 @@ document.addEventListener("DOMContentLoaded", () => {
         holder.position.x = 0.27;
         holder.position.y = -1.4;
         holder.position.z = 0.06;
-        //bottleHolder.material.lightMap = bakedHolderTexture;
-        //bottleHolder.material.lightMapIntensity = lightMapIntensity;
         objects.push(holder);
         scene.add(holder);
     });
 
     // Clouds (Marching Cubes)
     const cloudResolution = 16;
-    const cloudMaterial = new THREE.MeshPhongMaterial( { color: 0xffffff, specular: 0x111111, shininess: 1, emissive: 0xffffff, emissiveIntensity: 0.15 } );
+    const cloudMaterial = new THREE.MeshPhongMaterial({ 
+        color: 0xffffff, 
+        specular: 0x111111, 
+        shininess: 1, 
+        emissive: 0xffffff, 
+        emissiveIntensity: 1,
+    });
     const totalBalls = 7;
     initMarchingCubeBallSeeds(totalBalls); // Give each ball a random seed so that each ball's movement pattern differs.
     const clouds = new MarchingCubes( cloudResolution, cloudMaterial, false, false );
@@ -251,11 +250,11 @@ document.addEventListener("DOMContentLoaded", () => {
     //scene.add(lampPointLight);
 
     // Setup a directional light
-    const lightColor = 0xffffff;
+    /*const lightColor = 0xffffff;
     const lightIntensity = 1;
     const light = new THREE.DirectionalLight( lightColor, lightIntensity );
     light.position.set(-0.2, 1, -0.6);
-    scene.add(light);
+    scene.add(light);*/
 
     // Setup WebGL renderer
     const renderer = initRenderer();
