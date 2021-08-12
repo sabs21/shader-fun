@@ -1,5 +1,5 @@
 import * as THREE from "./three.module.js";
-import { OrbitControls } from './examples/jsm/controls/OrbitControls.js';
+//import { OrbitControls } from './examples/jsm/controls/OrbitControls.js';
 import { Water } from './examples/jsm/objects/Water2.js';
 import { GLTFLoader } from './examples/jsm/loaders/GLTFLoader.js';
 import { MarchingCubes } from './examples/jsm/objects/MarchingCubes.js';
@@ -13,10 +13,10 @@ document.addEventListener("DOMContentLoaded", () => {
     // Globals
     const objects = [];
     const balls = [];
-    const lightMapIntensity = 4;
+    const lightMapIntensity = 1.25;
     let canvasDimensions = getElemDimensions(threeDisplay);
-    let cameraX = 0;
-    let cameraY = 0;
+    //let cameraX = 0;
+    //let cameraY = 0;
 
     // Set the scene up
     const scene = new THREE.Scene();
@@ -27,16 +27,17 @@ document.addEventListener("DOMContentLoaded", () => {
     const near = 0.1;
     const far = 100;
     const camera = new THREE.PerspectiveCamera(fov, aspect, near, far);
-    const startX = -5;
+    const startX = -8;
     const startY = 0.4;
     const startZ = -6;
     camera.position.set(startX, startY, startZ);
-    camera.lookAt(scene.position);
+    camera.lookAt(-3, 0.2, 0);
+    //camera.rotation.x = THREE.Math.degToRad(40);
 
-    threeDisplay.addEventListener("mousemove", (e) => {
+    /*threeDisplay.addEventListener("mousemove", (e) => {
         cameraX = startX + (e.clientX/canvasDimensions.width) - 0.5;
         cameraY = startY + ((e.clientY/canvasDimensions.height)*0.25) - 0.2;
-    });
+    });*/
 
     // Add water mesh
     const planeWidth = 4.8;
@@ -71,7 +72,7 @@ document.addEventListener("DOMContentLoaded", () => {
         "pz.jpg", "nz.jpg"
     ] );
     scene.environment = cubeTexture;
-    scene.background = cubeTexture;
+    //scene.background = cubeTexture;
 
     // Add the table top
     let tableGeometry = new THREE.PlaneGeometry(30, 30, 1, 1);
@@ -79,9 +80,7 @@ document.addEventListener("DOMContentLoaded", () => {
     tableGeometry.setAttribute('uv2', new THREE.BufferAttribute( tableUVArr, 2 )); // create another uv map for the lightmap to use.
     let tableDiffuse = new THREE.TextureLoader().load("table_diffuse.jpg");
     let tableLightmap = new THREE.TextureLoader().load("table_lightmap.png");
-    let tableMaterial = new THREE.MeshPhongMaterial({
-        emissive: 0xffecab,
-        emissiveIntensity: 0.2,
+    let tableMaterial = new THREE.MeshLambertMaterial({
         map: tableDiffuse,
         lightMap: tableLightmap,
         lightMapIntensity: lightMapIntensity,
@@ -124,6 +123,25 @@ document.addEventListener("DOMContentLoaded", () => {
         scene.add(bottle);
     });
 
+    // Load the cork model
+    let corkLightmap = new THREE.TextureLoader().load("cork_lightmap.png");
+    corkLightmap.flipY = false; // glTF has a different texture transform than the three.js default. If you’re loading the texture separately try setting texture.flipY = false
+    new GLTFLoader().load( "./cork.glb", function (object) {
+        let cork = object.scene;
+        let corkGeometry = cork.children[0].geometry;
+        cork.material = new THREE.MeshLambertMaterial({
+            color: 0xd9a775,
+            lightMap: corkLightmap,
+            lightMapIntensity: lightMapIntensity,
+        });
+
+        let bakedCork = new THREE.Mesh(corkGeometry, cork.material);
+        bakedCork.position.x = -3.2;
+        bakedCork.position.y = 0.5;
+        objects.push(bakedCork);
+        scene.add(bakedCork);
+    });
+
     // Load the bottle holder model
     let holderDiffuse = new THREE.TextureLoader().load("holder_diffuse.jpg");
     //let holderNormal = new THREE.TextureLoader().load("holder_normal.png");
@@ -136,7 +154,7 @@ document.addEventListener("DOMContentLoaded", () => {
         //let holderUVArr = bottleHolderGeometry.getAttribute("uv").array;
         //bottleHolderGeometry.setAttribute('uv2', new THREE.BufferAttribute( holderUVArr, 2 ));
         //bottleHolder.castShadow = true;
-        bottleHolder.material = new THREE.MeshPhongMaterial({
+        bottleHolder.material = new THREE.MeshLambertMaterial({
             map: holderDiffuse,
             //normalMap: holderNormal,
             lightMap: holderLightmap,
@@ -144,22 +162,18 @@ document.addEventListener("DOMContentLoaded", () => {
         });
 
         let holder = new THREE.Mesh(bottleHolderGeometry, bottleHolder.material);
-        holder.position.x = 0.27;
-        holder.position.y = -1.4;
-        holder.position.z = 0.06;
+        holder.position.x = 0.26;
+        holder.position.y = -1.42;
+        holder.position.z = 0.09;
         objects.push(holder);
         scene.add(holder);
     });
 
     // Clouds (Marching Cubes)
     const cloudResolution = 16;
-    const cloudMaterial = new THREE.MeshPhongMaterial({ 
-        color: 0xffffff, 
-        specular: 0x111111, 
-        shininess: 1, 
-        emissive: 0xffffff, 
-        emissiveIntensity: 1,
-    });
+    let colorTop = new THREE.Vector3(0.980, 0.961, 0.855);
+    let colorBottom = new THREE.Vector3(0.376, 0.416, 0.482); //new THREE.Vector3(0.921, 0.486, 0.561);
+    const cloudMaterial = cloudShadow(colorTop, colorBottom); // Custom cloud shader to avoid using lighting.
     const totalBalls = 7;
     initMarchingCubeBallSeeds(totalBalls); // Give each ball a random seed so that each ball's movement pattern differs.
     const clouds = new MarchingCubes( cloudResolution, cloudMaterial, false, false );
@@ -179,7 +193,7 @@ document.addEventListener("DOMContentLoaded", () => {
         let lampUVArr = lampGeometry.getAttribute("uv").array;
         lampGeometry.setAttribute('uv2', new THREE.BufferAttribute( lampUVArr, 2 ));
 
-        lamp.material = new THREE.MeshPhongMaterial({
+        lamp.material = new THREE.MeshLambertMaterial({
             map: lampDiffuse,
             lightMap: lampLightmap,
             lightMapIntensity: lightMapIntensity,
@@ -209,7 +223,7 @@ document.addEventListener("DOMContentLoaded", () => {
         let shipUVArr = shipGeometry.getAttribute("uv").array;
         shipGeometry.setAttribute('uv2', new THREE.BufferAttribute( shipUVArr, 2 ));
 
-        ship.material = new THREE.MeshPhongMaterial({
+        ship.material = new THREE.MeshLambertMaterial({
             map: shipDiffuse,
             lightMap: shipLightmap,
             lightMapIntensity: lightMapIntensity,
@@ -261,9 +275,9 @@ document.addEventListener("DOMContentLoaded", () => {
     threeDisplay.appendChild( renderer.domElement );
 
     // Orbit controls
-    const controls = new OrbitControls( camera, renderer.domElement );
+    /*const controls = new OrbitControls( camera, renderer.domElement );
     controls.minDistance = 3;
-    controls.maxDistance = 10;
+    controls.maxDistance = 10;*/
 
     console.log("objects", objects);
 
@@ -277,6 +291,11 @@ document.addEventListener("DOMContentLoaded", () => {
         //camera.position.x = cameraX;
         //camera.position.y = cameraY;
 
+        // Camera wobbles a bit
+        camera.position.x = startX + (Math.sin(time)/12);
+        camera.position.y = startY + (Math.sin(time/2)/14);
+        camera.position.z = startZ + (Math.cos(time+2)/16);
+
         // if the canvas's css dimensions and renderer resolution differs, resize the renderer to prevent blockiness.
         if (resizeRendererToDisplaySize(renderer)) {
             // Fix distortions when canvas gets resized
@@ -286,10 +305,45 @@ document.addEventListener("DOMContentLoaded", () => {
         }
 
         updateCubes(clouds, balls, time);
-        rockTheBoat(objects[5], time);
+        rockTheBoat(objects[6], time);
 
         renderer.render( scene, camera );
     };
+
+    function cloudShadow(colorTop, colorBottom) {
+        var material = new THREE.MeshNormalMaterial();
+        material.onBeforeCompile = function ( shader ) {
+            shader.uniforms.colorTop = { value: colorTop };
+            shader.uniforms.colorBottom = { value: colorBottom };
+            //shader.vertexShader.replace(
+
+            //)
+            // Fragment Code
+            shader.fragmentShader = shader.fragmentShader.replace(
+                `#include <clipping_planes_pars_fragment>`,
+                `#include <clipping_planes_pars_fragment>
+                
+                uniform vec3 colorTop;
+                uniform vec3 colorBottom;`,
+            );
+            shader.fragmentShader = shader.fragmentShader.replace(
+                `gl_FragColor = vec4( packNormalToRGB( normal ), opacity );`,
+                `vec3 cloudGradient = mix(colorBottom, colorTop, normal.y);
+                gl_FragColor = vec4( cloudGradient, opacity );`,
+            );
+
+            console.log(shader);
+
+            material.userData.shader = shader;
+        }
+
+        // Make sure WebGLRenderer doesnt reuse a single program
+        material.customProgramCacheKey = function () {
+            return [ colorTop, colorBottom ];
+        };
+
+        return material;
+    }
 
     // Get the dimensions of a DOM element
     function getElemDimensions(elem) {
@@ -304,15 +358,15 @@ document.addEventListener("DOMContentLoaded", () => {
         for (let i = 0; i < totalBalls; i++) {
             balls[i] = {
                 x: Math.random(),
-                y: Math.random()/10 + 0.5,
-                z: Math.random()/2 + 0.25
+                y: Math.random()/10 + 0.5, // 0.5 is the standard y height of where the clouds generally should be.
+                z: Math.random()/2 + 0.25 // 0.25 is the standard z left and right locations of where the clouds generally should be.
             }
         }
     }
 
     function initRenderer() {
         var renderer = new THREE.WebGLRenderer({
-            //alpha: true,
+            alpha: true,
             antialias: true,
             precision: "mediump"
         });
