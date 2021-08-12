@@ -14,30 +14,43 @@ document.addEventListener("DOMContentLoaded", () => {
     const objects = [];
     const balls = [];
     const lightMapIntensity = 1.25;
-    let canvasDimensions = getElemDimensions(threeDisplay);
-    //let cameraX = 0;
-    //let cameraY = 0;
+    //let canvasDimensions = getElemDimensions(threeDisplay);
+    let screenDimensions = {
+        width: window.innerWidth || document.documentElement.clientWidth || document.body.clientWidth,
+        height: window.innerHeight || document.documentElement.clientHeight || document.body.clientHeight
+    }
+    console.log(screenDimensions);
+
+    //threeDisplay.height = screenDimensions.height + "px";
+    threeDisplay.style.height = screenDimensions.height + "px";
 
     // Set the scene up
     const scene = new THREE.Scene();
 
     // Set the camera up
     const fov = 30;
-    const aspect = 2;  // the canvas default
+    let aspect = screenDimensions.width / screenDimensions.height;  // the canvas default
     const near = 0.1;
     const far = 100;
     const camera = new THREE.PerspectiveCamera(fov, aspect, near, far);
-    const startX = -8;
-    const startY = 0.4;
-    const startZ = -6;
-    camera.position.set(startX, startY, startZ);
-    camera.lookAt(-3, 0.2, 0);
-    //camera.rotation.x = THREE.Math.degToRad(40);
+    // Camera's initial position and where it's pointed
+    let startPosX = -8;
+    let startPosY = 0.4;
+    let startPosZ = lerp(-6, -15, aspect - 1);
+    let startLookX = lerp(-3, -0.3, aspect - 1); 
+    let startLookY = 0.2;
+    let startLookZ = 0;
 
-    /*threeDisplay.addEventListener("mousemove", (e) => {
-        cameraX = startX + (e.clientX/canvasDimensions.width) - 0.5;
-        cameraY = startY + ((e.clientY/canvasDimensions.height)*0.25) - 0.2;
-    });*/
+    console.log("aspect: " + aspect, "startPosZ: " + startPosZ, "startLookX: " + startLookX);
+
+    // Alter where the camera points based on the size of the canvas.
+    /*if (canvasDimensions.width < 1000) {
+        //startPosZ = -15;
+        //startLookX = -0.3;
+        startPosZ = aspect * startPosZ;
+    }*/
+    camera.position.set(startPosX, startPosY, startPosZ);
+    camera.lookAt(startLookX, startLookY, startLookZ);
 
     // Add water mesh
     const planeWidth = 4.8;
@@ -282,19 +295,33 @@ document.addEventListener("DOMContentLoaded", () => {
     console.log("objects", objects);
 
     animate();
+
+    // On resize, adjust the camera 
+    window.addEventListener("resize", (e) => {
+        screenDimensions = {
+            width: e.target.innerWidth,
+            height: e.target.innerHeight
+        }
+        // Update the canvas container
+        threeDisplay.style.height = screenDimensions.height + "px";
+        renderer.domElement.style.width = screenDimensions.width + "px";
+        renderer.domElement.style.height = screenDimensions.height + "px";
+        // Update the aspect ratio in order to recalculate how to place the camera.
+        aspect = screenDimensions.width / screenDimensions.height; 
+        startPosZ = lerp(-6, -15, aspect - 1);
+        startLookX = lerp(-3, -0.3, aspect - 1); 
+        camera.position.set(startPosX, startPosY, startPosZ);
+        camera.lookAt(startLookX, startLookY, startLookZ);
+    });
     
     function animate (time) {
         requestAnimationFrame(animate);
         time *= 0.001; // Convert time to seconds.
 
-        // Mouse slightly moves the camera
-        //camera.position.x = cameraX;
-        //camera.position.y = cameraY;
-
         // Camera wobbles a bit
-        camera.position.x = startX + (Math.sin(time)/12);
-        camera.position.y = startY + (Math.sin(time/2)/14);
-        camera.position.z = startZ + (Math.cos(time+2)/16);
+        camera.position.x = startPosX + (Math.sin(time)/12);
+        camera.position.y = startPosY + (Math.sin(time/2)/14);
+        camera.position.z = startPosZ + (Math.cos(time+2)/16);
 
         // if the canvas's css dimensions and renderer resolution differs, resize the renderer to prevent blockiness.
         if (resizeRendererToDisplaySize(renderer)) {
@@ -365,20 +392,39 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     function initRenderer() {
-        var renderer = new THREE.WebGLRenderer({
+        let renderer = new THREE.WebGLRenderer({
             alpha: true,
             antialias: true,
             precision: "mediump"
         });
         renderer.setClearColor( 0x000000, 0);
-        renderer.physicallyCorrectLights = true;
-        renderer.shadowMap.enabled = true;
-        renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+        //renderer.physicallyCorrectLights = true;
+        //renderer.shadowMap.enabled = true;
+        //renderer.shadowMap.type = THREE.PCFSoftShadowMap;
         renderer.outputEncoding = THREE.sRGBEncoding;
         renderer.toneMapping = THREE.ACESFilmicToneMapping;
         renderer.toneMappingExposure = 0.8;
 
+        // Ensure the height of the canvas matches the height of the div.
+        let canvas = renderer.domElement;
+        canvas.height = screenDimensions.height;
+        canvas.style.height = screenDimensions.height + "px";
+
         return renderer;
+    }
+
+    // Linear interpolation between two values
+    // x and y are the two values to interpolate between
+    // t is the degree of interpolation between x and y.
+    function lerp(x, y, t) {
+        // Ensure t is normalized between 0 and 1.
+        if (t > 1) {
+            t = 1;
+        }
+        else if (t < 0) {
+            t = 0;
+        }
+        return x*t + y*(1-t);
     }
 
     // Fix blockiness by ensuring the size of the canvas's resolution matches with the canvas's css dimensions.
