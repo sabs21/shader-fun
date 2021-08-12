@@ -255,7 +255,7 @@ document.addEventListener("DOMContentLoaded", () => {
     let backdropMaterial = dotWaves();
     let backdrop = new THREE.Mesh(backdropGeometry, backdropMaterial);
     //backdrop.position.x = -3;
-    backdrop.position.y = 0;
+    backdrop.position.y = 4;
     //backdrop.position.z = 4;
     //table.rotation.x = THREE.Math.degToRad(270);
     //table.rotation.z = THREE.Math.degToRad(270);
@@ -482,11 +482,14 @@ document.addEventListener("DOMContentLoaded", () => {
                 
                 //vec3 colorA = vec3(1.0, 0.8, 0.2);
                 //vec3 colorB = vec3(0.4, 0.75, 1.0);
-                vec4 fg = vec4(mix(hue2rgb(time/16.0)*cos(uv.x), hue2rgb(time/20.0)*sin(uv.y), noiseValue), 1.0);
+                vec3 fg = mix(hue2rgb(time/16.0)*cos(uv.x), hue2rgb(time/20.0)*sin(uv.y), noiseValue);
                 //vec3 fg = vec3(uv.x, uv.y, sin(time));
                 //vec3 fg = vec3(0.0, 0.5, 1.0); // sky blue
-                vec4 bg = vec4(1.0, 1.0, 1.0, 0.0); // transparent
-                gl_FragColor = mix(bg,fg,color);
+                //vec3 bg = vec3(1.0, 1.0, 1.0); // transparent
+
+                float bgDist = distance(vec2(-0.1, -0.1), vec2(uv.x, uv.y));
+                vec3 bg = vec3(smoothstep(bgDist, bgDist+0.8, 1.0));
+                gl_FragColor = vec4(mix(bg,fg,color), 1.0);
             }
             `,
             side: THREE.BackSide
