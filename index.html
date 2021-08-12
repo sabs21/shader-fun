@@ -43,12 +43,8 @@
             <li class="function">
                 <h3>Circle</h3>
                 <code>float circle(vec2 st, vec2 center, float size, float blur) {
-    float circ = 0.0;
     float dist = distance(st, center);
-    if (dist < size) {
-        circ += smoothstep(dist, dist+blur, size);
-    }
-    return circ;
+    return smoothstep(dist, dist+blur, size);
 }</code>
             </li>
         </ul>

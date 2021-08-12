@@ -1,5 +1,5 @@
 import * as THREE from "./three.module.js";
-//import { OrbitControls } from './examples/jsm/controls/OrbitControls.js';
+import { OrbitControls } from './examples/jsm/controls/OrbitControls.js';
 import { Water } from './examples/jsm/objects/Water2.js';
 import { GLTFLoader } from './examples/jsm/loaders/GLTFLoader.js';
 import { MarchingCubes } from './examples/jsm/objects/MarchingCubes.js';
@@ -36,7 +36,7 @@ document.addEventListener("DOMContentLoaded", () => {
     // Camera's initial position and where it's pointed
     let startPosX = -8;
     let startPosY = 0.4;
-    let startPosZ = lerp(-6, -15, aspect - 1);
+    let startPosZ = lerp(-6, -20, aspect - 1);
     let startLookX = lerp(-3, -0.3, aspect - 1); 
     let startLookY = 0.2;
     let startLookZ = 0;
@@ -99,7 +99,6 @@ document.addEventListener("DOMContentLoaded", () => {
         lightMapIntensity: lightMapIntensity,
     });
     let table = new THREE.Mesh(tableGeometry, tableMaterial);
-
     table.position.y = -1.4;
     table.rotation.x = THREE.Math.degToRad(270);
     table.rotation.z = THREE.Math.degToRad(270);
@@ -251,6 +250,19 @@ document.addEventListener("DOMContentLoaded", () => {
         scene.add(bakedShip);
     });
 
+    // Setup dot wave backdrop
+    let backdropGeometry = new THREE.CylinderGeometry(30, 30, 20, 30, 1, true, THREE.Math.degToRad(300), THREE.Math.degToRad(220));
+    let backdropMaterial = dotWaves();
+    let backdrop = new THREE.Mesh(backdropGeometry, backdropMaterial);
+    //backdrop.position.x = -3;
+    backdrop.position.y = 0;
+    //backdrop.position.z = 4;
+    //table.rotation.x = THREE.Math.degToRad(270);
+    //table.rotation.z = THREE.Math.degToRad(270);
+    objects.push(backdrop);
+    scene.add(backdrop);
+    //console.log(backdrop);
+
     // Setup lamp spotlight
     //let lampSpotLight = new THREE.SpotLight( 0xffddaa );
     //let bulbGeometry = new THREE.SphereGeometry( 0.3, 16, 8 );
@@ -308,7 +320,7 @@ document.addEventListener("DOMContentLoaded", () => {
         renderer.domElement.style.height = screenDimensions.height + "px";
         // Update the aspect ratio in order to recalculate how to place the camera.
         aspect = screenDimensions.width / screenDimensions.height; 
-        startPosZ = lerp(-6, -15, aspect - 1);
+        startPosZ = lerp(-6, -20, aspect - 1);
         startLookX = lerp(-3, -0.3, aspect - 1); 
         camera.position.set(startPosX, startPosY, startPosZ);
         camera.lookAt(startLookX, startLookY, startLookZ);
@@ -330,9 +342,18 @@ document.addEventListener("DOMContentLoaded", () => {
             camera.aspect = canvas.clientWidth / canvas.clientHeight;
             camera.updateProjectionMatrix();
         }
+        backdrop.material.uniforms.time.value = time;
+        /*scene.traverse( function ( child ) {
+            if ( child.isMesh ) {
+                const shader = child.material.userData.shader;
+                if ( shader ) {
+                    shader.uniforms.time.value = time;
+                }
+            }
+        } );*/
 
         updateCubes(clouds, balls, time);
-        rockTheBoat(objects[6], time);
+        rockTheBoat(objects[7], time);
 
         renderer.render( scene, camera );
     };
@@ -372,14 +393,114 @@ document.addEventListener("DOMContentLoaded", () => {
         return material;
     }
 
+    function dotWaves() {
+        return new THREE.ShaderMaterial({
+            uniforms: {
+                time: { value: 1.0 },
+            },
+            vertexShader: `
+            varying vec2 vUv; 
+            void main()
+            {
+                vUv = uv;
+            
+                vec4 mvPosition = modelViewMatrix * vec4(position, 1.0 );
+                gl_Position = projectionMatrix * mvPosition;
+            }
+            `,
+            fragmentShader: `
+            // https://www.shadertoy.com/view/wt23Rt
+            #define saturate2(v) clamp(v,0.,1.)
+
+            uniform float time;
+            varying vec2 vUv;
+
+            vec3 hue2rgb(float hue) {
+                hue=fract(hue);
+                return saturate2(vec3(
+                    abs(hue*6.-3.)-1.,
+                    2.-abs(hue*6.-2.),
+                    2.-abs(hue*6.-4.)
+                ));
+            }
+
+            // Simplex 2D noise
+            // https://gist.github.com/patriciogonzalezvivo/670c22f3966e662d2f83
+            vec3 permute(vec3 x) { return mod(((x*34.0)+1.0)*x, 289.0); }
+
+            float snoise(vec2 v) {
+            const vec4 C = vec4(0.211324865405187, 0.366025403784439,
+                    -0.577350269189626, 0.024390243902439);
+            vec2 i  = floor(v + dot(v, C.yy) );
+            vec2 x0 = v -   i + dot(i, C.xx);
+            vec2 i1;
+            i1 = (x0.x > x0.y) ? vec2(1.0, 0.0) : vec2(0.0, 1.0);
+            vec4 x12 = x0.xyxy + C.xxzz;
+            x12.xy -= i1;
+            i = mod(i, 289.0);
+            vec3 p = permute( permute( i.y + vec3(0.0, i1.y, 1.0 ))
+            + i.x + vec3(0.0, i1.x, 1.0 ));
+            vec3 m = max(0.5 - vec3(dot(x0,x0), dot(x12.xy,x12.xy),
+                dot(x12.zw,x12.zw)), 0.0);
+            m = m*m ;
+            m = m*m ;
+            vec3 x = 2.0 * fract(p * C.www) - 1.0;
+            vec3 h = abs(x) - 0.5;
+            vec3 ox = floor(x + 0.5);
+            vec3 a0 = x - ox;
+            m *= 1.79284291400159 - 0.85373472095314 * ( a0*a0 + h*h );
+            vec3 g;
+            g.x  = a0.x  * x0.x  + h.x  * x0.y;
+            g.yz = a0.yz * x12.xz + h.yz * x12.yw;
+            return 130.0 * dot(m, g);
+            }
+
+            // Draw a circle
+            float circle(vec2 st, vec2 center, float size, float blur) {
+                float dist = distance(st, center);
+                return smoothstep(dist, dist+blur, size);
+            }
+
+            void main()
+            {
+                // Normalized pixel coordinates (from -0.5 to 0.5)
+                vec2 uv = -1.0 + 2.0 * vUv;
+
+                int gridCount = 25; // This will be how many circles fit within the grid. How many balls fitting within the viewport width depends on the aspect ratio.
+                
+                float color = 0.0;
+                vec2 circleCenter = vec2(0.5, 0.5);
+                float size = 0.1;
+                float blur = 0.01;
+                
+                float adjustedX = uv.x + 0.5;
+                float adjustedY = uv.y + 0.5;
+                float noiseValue = snoise(vec2(adjustedX + cos(time/3.), adjustedY + time/6.))/2.0;
+                float posX = mod(adjustedX*5.0 * float(gridCount), 1.0);
+                float posY = mod(adjustedY * float(gridCount), 1.0);
+                color = circle(vec2(posX, posY), circleCenter, size+noiseValue, blur);
+                
+                //vec3 colorA = vec3(1.0, 0.8, 0.2);
+                //vec3 colorB = vec3(0.4, 0.75, 1.0);
+                vec4 fg = vec4(mix(hue2rgb(time/16.0)*cos(uv.x), hue2rgb(time/20.0)*sin(uv.y), noiseValue), 1.0);
+                //vec3 fg = vec3(uv.x, uv.y, sin(time));
+                //vec3 fg = vec3(0.0, 0.5, 1.0); // sky blue
+                vec4 bg = vec4(1.0, 1.0, 1.0, 0.0); // transparent
+                gl_FragColor = mix(bg,fg,color);
+            }
+            `,
+            side: THREE.BackSide
+        });
+    }
+
     // Get the dimensions of a DOM element
-    function getElemDimensions(elem) {
+    /*function getElemDimensions(elem) {
         var rect = elem.getBoundingClientRect();
         return {
             width: parseInt(rect.width),
             height: parseInt(rect.height)
         }
-    }
+    }*/
 
     function initMarchingCubeBallSeeds(totalBalls) {
         for (let i = 0; i < totalBalls; i++) {
@@ -430,9 +551,9 @@ document.addEventListener("DOMContentLoaded", () => {
     // Fix blockiness by ensuring the size of the canvas's resolution matches with the canvas's css dimensions.
     function resizeRendererToDisplaySize(renderer) {
         const canvas = renderer.domElement;
-        //const pixelRatio = window.devicePixelRatio; // For HD-DPI displays
-        const width = canvas.clientWidth;// * pixelRatio | 0;
-        const height = canvas.clientHeight;// * pixelRatio | 0;
+        const pixelRatio = window.devicePixelRatio; // For HD-DPI displays
+        const width = canvas.clientWidth * pixelRatio | 0;
+        const height = canvas.clientHeight * pixelRatio | 0;
         const needResize = canvas.width !== width || canvas.height !== height;
         if (needResize) {
           renderer.setSize(width, height, false);
