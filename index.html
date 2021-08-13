@@ -49,5 +49,137 @@
             </li>
         </ul>
     </section>
+    <section>
+        <h1>How do I pass vUv coordinates to the fragment shader when using onBeforeCompile()?</h1>
+        <h2>Background Information Necessary to Understand the Answer.</h2>
+        <h3>What is a UV map?</h3>
+        <p>
+            A UV map is a 2D map which projects a 2D texture onto a 3D model's surface. The "U" and "V" stand for x and y respectively.
+        </p>
+        <h3>What is vUv in Three.JS?</h3>
+        <p>
+            The vUv variable is a 2D vector that <b>contains the UV coordinates of the pixel being processed.</b> 
+            This is not the same as a UV, since the UV is a 2D map and not specific coordinates. This is often confused with how ShaderToy's naming scheme goes, since <b>ShaderToy's uv variable is synonymous with Three.JS's vUv variable.</b>
+        </p>
+        <h3>How Three.JS creates its own materials.</h3>
+        <p>
+            Three.JS uses modular GLSL building blocks called <a href="https://github.com/mrdoob/three.js/tree/master/src/renderers/shaders/ShaderChunk">ShaderChunks</a> to assemble all sorts of different shaders. 
+            Each <a href="https://threejs.org/docs/?q=material#api/en/materials/Material">material that Three.JS offers</a> mostly differ by the ShaderChunks used.
+        </p>
+        <h3>ShaderChunks and their logic.</h3>
+        <p>
+            ShaderChunks often contain if statements which check that a certain macro is defined. Macros in glsl are those <i>#define NAME VALUE</i> statements that you normally see on the top of glsl code. Here is an example from a commonly seen ShaderChunk called <i>uv_vertex.glsl.js</i>:
+            <div class="function">
+                <h3>uv_vertex.glsl.js</h3>
+                <code >export default /* glsl */`
+<b class="highlighted_red">#ifdef USE_UV</b>
+    vUv = ( uvTransform * vec3( uv, 1 ) ).xy;
+<b class="highlighted_red">#endif</b></code>
+            </div>
+            
+            Notice the highlighted red if statement. This ShaderChunk requires the <code class="inline_code">USE_UV</code> macro to be defined in order for vUv to be defined and assigned a value.
+        </p>
+        <h3>What is onBeforeCompile()?</h3>
+        <p>The documentation for onBeforeCompile() is lacking to say the least, but they define this functions as follows, 
+            "An optional callback that is <b>executed immediately before the shader program is compiled</b>. This function is called with the shader source code as a parameter. <b>Useful for the modification of built-in materials.</b>"
+            The key points to note are highlighted here, but the implicationss of what this means really falls through the cracks here. In short, using onBeforeCompile() allows you to edit the material's vertex and/or fragment shaders before any of the ShaderChunk definitions get loaded as actual glsl code. This lets you add and remove ShaderChunks, pass in your own uniforms/varying variables, and define any macros needed for certain ShaderChunks to work as intended.</p>
+        <h3>How do I use onBeforeCompile()?</h3>
+        <p>
+            In order to make sure that I use onBeforeCompile() correctly, I generally follow this formula:
+            <div class="function">
+                <h3>onBeforeCompile Boilerplate</h3>
+                <code>function editedMaterial(color, height) {
+    let material = new THREE.MeshLambertMaterial({
+        // Material properties here
+    });
+
+    material.onBeforeCompile = function ( shader ) {
+        // Uniforms
+        shader.uniforms.color = { type: 'v3', value: color };
+        shader.uniforms.height = { type: 'f', value: height };
+        
+        // Vertex shader edits
+        shader.vertexShader = shader.vertexShader.replace(
+            // Replace an already existing line of code in the vertex shader
+        )
+
+        // Fragment shader edits
+        shader.fragmentShader = shader.fragmentShader.replace(
+            // Replace an already existing line of code in the fragment shader
+        );
+        
+        // View the shader in the console to verify the edits you've made to the vertex and fragment shaders
+        console.log(shader);
+        
+        // Assign this newly edited shader to the material.
+        material.userData.shader = shader;
+    }
+
+    // Make sure WebGLRenderer doesnt reuse a single program.
+    // This is Three.JS's way to efficiently cache shaders. However, if you don't return the parameters used by the editedMaterial() function, 
+    // then a completely different material may unexpectedly inherit this same shader if that other material also uses onBeforeCompile.
+    material.customProgramCacheKey = function () {
+        return [
+            color,
+            height
+        ];
+    };
+
+    return material;
+}</code>
+            </div>
+            With this code are a few important rules to follow. Follow these and you should have next to no trouble.
+            <ol>
+                <li>Always create a function like this if you want to edit a material's shader using onBeforeCompile().</li>
+                <li>If you have parameters for your editedMaterial() function, always assign a function which returns all of your parameters to customProgramCacheKey.</li>
+            </ol>
+        </p>
+        <h2>Passing the vUv coordinates to the fragment shader when using onBeforeCompile()</h2>
+        <p>
+            Now with all of this information, we can finally address the answer. <b>We need to define the <code class="inline_code">USE_UV</code> macro in both the vertex shader and the fragment shader.</b> How we go about this is actually quite easy if we follow the boilerplate shown earlier. Here's an example of an actual function which does exactly this:
+            <div class="function">
+                <h3>Solution</h3>
+                <code>function holderTexture(lightmap) {
+    let material = new THREE.MeshLambertMaterial({
+        lightMap: lightmap,
+        lightMapIntensity: lightMapIntensity,
+    });
+
+    material.onBeforeCompile = function ( shader ) {
+        shader.uniforms.lightmap = { type: 't', value: lightmap };
+
+        shader.vertexShader = shader.vertexShader.replace(
+            `#define LAMBERT`,
+            `#define LAMBERT
+            <b>#define USE_UV</b>`
+        )
+
+        // Fragment Code
+        shader.fragmentShader = shader.fragmentShader.replace(
+            `uniform vec3 diffuse;`,
+            `<b>#define USE_UV</b>
+            uniform vec3 diffuse;`,
+        );
+        shader.fragmentShader = shader.fragmentShader.replace(
+            `vec4 diffuseColor = vec4( diffuse, opacity );`,
+            `vec3 newDiffuse = vec3(1.0, vUv.y, 0.0);
+            vec4 diffuseColor = vec4( newDiffuse, opacity );`,
+        );
+
+        console.log(shader);
+
+        material.userData.shader = shader;
+    }
+
+    // Make sure WebGLRenderer doesnt reuse a single program
+    material.customProgramCacheKey = function () {
+        return lightmap;
+    };
+
+    return material;
+}</code>
+            </div>
+        </p>
+    </section>
 </body>
 </html>

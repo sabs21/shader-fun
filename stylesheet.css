@@ -9,6 +9,35 @@ html, body {
 section {
   padding: 10px;
 }
+h1, h2, h3, h4, h5, h6 {
+  margin-top: 20px;
+  margin-bottom: 8px;
+}
+h1:first-child, h2:first-child, h3:first-child, h4:first-child, h5:first-child, h6:first-child {
+  margin-top: 0px;
+  margin-bottom: 8px;
+}
+h1 {
+  font-size: 2em;
+}
+h2 {
+  font-size: 1.65em;
+}
+h3 {
+  font-size: 1.4em;
+}
+h4 {
+  font-size: 1.3em;
+}
+h5 {
+  font-size: 1.22em;
+}
+h6 {
+  font-size: 1.15em;
+}
+p, code, pre {
+  font-size: 1.1em;
+}
 #threeDisplay, canvas {
   position: relative;
   display: block;
@@ -25,7 +54,7 @@ canvas {
   position: relative;
   display: block;
   padding: 10px;
-  margin-bottom: 20px;
+  margin: 20px 0px;
   border-left: 4px solid rgb(100, 180, 255);
 }
 .function h3 {
@@ -33,8 +62,20 @@ canvas {
   display: block;
   margin-bottom: 8px;
 }
-.function code {
+code, code > b, code > i {
+  font-size: 1em;
+  color: rgb(98, 98, 98);
   white-space: pre;
-  color: grey;
   font-family: Consolas, sans-serif;
+}
+.highlighted_red {
+  color: red;
+}
+.inline_code {
+  color: rgb(40, 40, 40);
+  background-color: #eee;
+  padding: 2px 6px;
+}
+b > .inline_code {
+  font-weight: bold;
 }
