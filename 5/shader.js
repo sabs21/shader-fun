@@ -143,49 +143,57 @@ document.addEventListener("DOMContentLoaded", () => {
     // Load the map model
     let mapDiffuse = new THREE.TextureLoader().load("map_diffuse.jpg");
     mapDiffuse.flipY = false;
-    let mapLightmap = new THREE.TextureLoader().load("map_lightmap.png");
+    let mapLightmap = new THREE.TextureLoader().load("map_lightmap.jpg");
     mapLightmap.flipY = false;
     new GLTFLoader().load( "./map.glb", function (object) {
-        // Create a glass-like material for the bottle
-        let map = object.scene.children[0];
+        let map = object.scene;
+        let mapGeometry = map.children[0].geometry;
+        let mapUVArr = mapGeometry.getAttribute("uv").array;
+        mapGeometry.setAttribute('uv2', new THREE.BufferAttribute( mapUVArr, 2 ));
+
         map.material = new THREE.MeshLambertMaterial({
             map: mapDiffuse,
             lightMap: mapLightmap,
             lightMapIntensity: lightMapIntensity,
             side: THREE.DoubleSide
         });
+        let bakedMap = new THREE.Mesh(mapGeometry, map.material);
+
         //map.position.x = 2.25;
-        map.position.x = -4;
-        map.position.y = -1.378;
-        map.rotation.y = THREE.Math.degToRad(260);
-        map.scale.set(10, 10, 10);
-        objects.push(map);
-        scene.add(map);
+        bakedMap.position.x = -4;
+        bakedMap.position.y = -1.378;
+        bakedMap.rotation.y = THREE.Math.degToRad(260);
+        bakedMap.scale.set(10, 10, 10);
+        objects.push(bakedMap);
+        scene.add(bakedMap);
     });
 
     // Load pin model
     let pinDiffuse = new THREE.TextureLoader().load("pin_diffuse.png");
     pinDiffuse.flipY = false;
-    let pinLightmap = new THREE.TextureLoader().load("pin_lightmap.png");
+    let pinLightmap = new THREE.TextureLoader().load("pin_lightmap.jpg");
     pinLightmap.flipY = false;
     new GLTFLoader().load( "./pin.glb", function (object) {
-        // Create a glass-like material for the bottle
-        let pin = object.scene.children[0];
+        let pin = object.scene;
+        let pinGeometry = pin.children[0].geometry;
+        let pinUVArr = pinGeometry.getAttribute("uv").array;
+        pinGeometry.setAttribute('uv2', new THREE.BufferAttribute( pinUVArr, 2 ));
         pin.material = new THREE.MeshLambertMaterial({
             map: pinDiffuse,
             lightMap: pinLightmap,
             lightMapIntensity: lightMapIntensity,
             side: THREE.FrontSide
         });
+        let bakedPin = new THREE.Mesh(pinGeometry, pin.material);
         //map.position.x = 2.25;
-        pin.position.x = -3.65;
-        pin.position.y = -1.1;
-        pin.position.z = -0.38;
-        pin.rotation.x = THREE.Math.degToRad(345);
+        bakedPin.position.x = -3.65;
+        bakedPin.position.y = -1.05;
+        bakedPin.position.z = -0.38;
+        bakedPin.rotation.x = THREE.Math.degToRad(165);
        // pin.rotation.z = THREE.Math.degToRad(5);
-        pin.scale.set(1.5, 1.5, 1.5);
-        objects.push(pin);
-        scene.add(pin);
+       bakedPin.scale.set(1.5, 1.5, 1.5);
+        objects.push(bakedPin);
+        scene.add(bakedPin);
     });
     
     // Load the bottle model
