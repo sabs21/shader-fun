@@ -36,24 +36,24 @@ document.addEventListener("DOMContentLoaded", () => {
 
     // Establish camera positioning plans (camera panning)
     let positionPlans = [];
-    positionPlans[0] = new CameraPlan(new THREE.Vector3(-1, 1, 1), new THREE.Vector3(-1, 3, 1), 5, 5, true);
-    positionPlans[1] = new CameraPlan(new THREE.Vector3(8, 1, 10), new THREE.Vector3(-4, 1, 10), 8, 0, false);
-    positionPlans[2] = new CameraPlan(new THREE.Vector3(8, 0.4, 6), new THREE.Vector3(10, 0.4, 8), 6, 0, true);
-    positionPlans[3] = new CameraPlan(new THREE.Vector3(-8, 0.4, -6), new THREE.Vector3(-8, 0.4, -6), 1, 8, false);
-    positionPlans[4] = new CameraPlan(new THREE.Vector3(-8, 0.4, -6), new THREE.Vector3(-8, 2, -3), 5, 5, true);
-    positionPlans[5] = new CameraPlan(new THREE.Vector3(-9, 8, -18), new THREE.Vector3(-4, 6, 0), 8, 0, false);
-    positionPlans[6] = new CameraPlan(new THREE.Vector3(0, 6, 0), new THREE.Vector3(0, 8, 0), 10, 0, true);
+    //positionPlans[0] = new CameraPlan(new THREE.Vector3(-1, 1, 1), new THREE.Vector3(-1, 3, 1), 5, 5, true);
+    positionPlans[0] = new CameraPlan(new THREE.Vector3(8, 1, 10), new THREE.Vector3(-4, 1, 10), 8, 0, false);
+    positionPlans[1] = new CameraPlan(new THREE.Vector3(8, 0.4, 6), new THREE.Vector3(10, 0.4, 8), 6, 0, true);
+    positionPlans[2] = new CameraPlan(new THREE.Vector3(-8, 0.4, -6), new THREE.Vector3(-8, 0.4, -6), 1, 8, false);
+    positionPlans[3] = new CameraPlan(new THREE.Vector3(-8, 0.4, -6), new THREE.Vector3(-8, 2, -3), 5, 5, true);
+    positionPlans[4] = new CameraPlan(new THREE.Vector3(-9, 8, -18), new THREE.Vector3(-4, 6, 0), 8, 0, false);
+    positionPlans[5] = new CameraPlan(new THREE.Vector3(0, 6, 0), new THREE.Vector3(0, 8, 0), 10, 0, true);
     let positionDirector = new CameraDirector(positionPlans);
 
     // Establish camera lookAt plans (camera focal point)
     let lookAtPlans = [];
-    lookAtPlans[0] = new CameraPlan(new THREE.Vector3(0, 0, 0), new THREE.Vector3(0, 0, 0), 5, 5, true);
-    lookAtPlans[1] = new CameraPlan(new THREE.Vector3(5, 0, 0), new THREE.Vector3(-12, 0, 0), 8, 0, false);
-    lookAtPlans[2] = new CameraPlan(new THREE.Vector3(0, 0, 0), new THREE.Vector3(0, 0, 0), 6, 0, true);
-    lookAtPlans[3] = new CameraPlan(new THREE.Vector3(-3, 0.2, 0), new THREE.Vector3(-3, 0.2, 0), 1, 8, false);
-    lookAtPlans[4] = new CameraPlan(new THREE.Vector3(-3, 0.2, 0), new THREE.Vector3(-5, 0, -1.5), 5, 5, true);
-    lookAtPlans[5] = new CameraPlan(new THREE.Vector3(-2, 0, -9), new THREE.Vector3(3, -2, 9), 8, 0, false); // For a smooth pan, take the movement and subtract the to movement with the from movement. Add this number to the from lookAt numbers. (I.e., lookAtTo = new THREE.Vector3((posTo.x - posFrom.x) + lookAtFrom.x, (posTo.y - posFrom.y) + lookAtFrom.y, (posTo.z - posFrom.z) + lookAtFrom.z)
-    lookAtPlans[6] = new CameraPlan(new THREE.Vector3(99, 7, 0), new THREE.Vector3(0, 7, 99), 10, 0, false);
+    //lookAtPlans[0] = new CameraPlan(new THREE.Vector3(0, 0, 0), new THREE.Vector3(0, 0, 0), 5, 5, true);
+    lookAtPlans[0] = new CameraPlan(new THREE.Vector3(5, 0, 0), new THREE.Vector3(-12, 0, 0), 8, 0, false);
+    lookAtPlans[1] = new CameraPlan(new THREE.Vector3(0, 0, 0), new THREE.Vector3(0, 0, 0), 6, 0, true);
+    lookAtPlans[2] = new CameraPlan(new THREE.Vector3(-3, 0.2, 0), new THREE.Vector3(-3, 0.2, 0), 1, 8, false);
+    lookAtPlans[3] = new CameraPlan(new THREE.Vector3(-3, 0.2, 0), new THREE.Vector3(-5, 0, -1.5), 5, 5, true);
+    lookAtPlans[4] = new CameraPlan(new THREE.Vector3(-2, 0, -9), new THREE.Vector3(3, -2, 9), 8, 0, false); // For a smooth pan, take the movement and subtract the to movement with the from movement. Add this number to the from lookAt numbers. (I.e., lookAtTo = new THREE.Vector3((posTo.x - posFrom.x) + lookAtFrom.x, (posTo.y - posFrom.y) + lookAtFrom.y, (posTo.z - posFrom.z) + lookAtFrom.z)
+    lookAtPlans[5] = new CameraPlan(new THREE.Vector3(99, 7, 0), new THREE.Vector3(0, 7, 99), 10, 0, false);
     let lookAtDirector = new CameraDirector(lookAtPlans);
 
     // Camera's initial position and where it's pointed
