@@ -16,6 +16,8 @@ document.addEventListener("DOMContentLoaded", () => {
         width: window.innerWidth || document.documentElement.clientWidth || document.body.clientWidth,
         height: window.innerHeight || document.documentElement.clientHeight || document.body.clientHeight
     }
+    let newCameraPosition = null;
+    let newCameraLookAt = null;
     //console.log(screenDimensions);
 
     //threeDisplay.height = screenDimensions.height + "px";
@@ -30,18 +32,63 @@ document.addEventListener("DOMContentLoaded", () => {
     const near = 0.1;
     const far = 100;
     const camera = new THREE.PerspectiveCamera(fov, aspect, near, far);
+    //camera.up = new THREE.Vector3(0,0,1); // Set the up vector so that the lookAt function works as expected.
+
+    // Establish camera positioning plans (camera panning)
+    let positionPlans = [];
+    positionPlans[0] = new CameraPlan(new THREE.Vector3(-1, 1, 1), new THREE.Vector3(-1, 3, 1), 5, 5, true);
+    positionPlans[1] = new CameraPlan(new THREE.Vector3(8, 1, 10), new THREE.Vector3(-4, 1, 10), 8, 0, false);
+    positionPlans[2] = new CameraPlan(new THREE.Vector3(8, 0.4, 6), new THREE.Vector3(10, 0.4, 8), 6, 0, true);
+    positionPlans[3] = new CameraPlan(new THREE.Vector3(-8, 0.4, -6), new THREE.Vector3(-8, 0.4, -6), 1, 8, false);
+    positionPlans[4] = new CameraPlan(new THREE.Vector3(-8, 0.4, -6), new THREE.Vector3(-8, 2, -3), 5, 5, true);
+    positionPlans[5] = new CameraPlan(new THREE.Vector3(-9, 8, -18), new THREE.Vector3(-4, 6, 0), 8, 0, false);
+    positionPlans[6] = new CameraPlan(new THREE.Vector3(0, 6, 0), new THREE.Vector3(0, 8, 0), 10, 0, true);
+    let positionDirector = new CameraDirector(positionPlans);
+
+    // Establish camera lookAt plans (camera focal point)
+    let lookAtPlans = [];
+    lookAtPlans[0] = new CameraPlan(new THREE.Vector3(0, 0, 0), new THREE.Vector3(0, 0, 0), 5, 5, true);
+    lookAtPlans[1] = new CameraPlan(new THREE.Vector3(5, 0, 0), new THREE.Vector3(-12, 0, 0), 8, 0, false);
+    lookAtPlans[2] = new CameraPlan(new THREE.Vector3(0, 0, 0), new THREE.Vector3(0, 0, 0), 6, 0, true);
+    lookAtPlans[3] = new CameraPlan(new THREE.Vector3(-3, 0.2, 0), new THREE.Vector3(-3, 0.2, 0), 1, 8, false);
+    lookAtPlans[4] = new CameraPlan(new THREE.Vector3(-3, 0.2, 0), new THREE.Vector3(-5, 0, -1.5), 5, 5, true);
+    lookAtPlans[5] = new CameraPlan(new THREE.Vector3(-2, 0, -9), new THREE.Vector3(3, -2, 9), 8, 0, false); // For a smooth pan, take the movement and subtract the to movement with the from movement. Add this number to the from lookAt numbers. (I.e., lookAtTo = new THREE.Vector3((posTo.x - posFrom.x) + lookAtFrom.x, (posTo.y - posFrom.y) + lookAtFrom.y, (posTo.z - posFrom.z) + lookAtFrom.z)
+    lookAtPlans[6] = new CameraPlan(new THREE.Vector3(99, 7, 0), new THREE.Vector3(0, 7, 99), 10, 0, false);
+    let lookAtDirector = new CameraDirector(lookAtPlans);
+
     // Camera's initial position and where it's pointed
+    /*let yPosCalculation = (aspect) => { return lerp(0.6, 1.6, aspect - 1); }
+    let zPosCalculation = (aspect) => { return lerp(-6, -15, aspect - 1); }
+    let xLookCalculation = (aspect) => { return lerp(-3, -0.3, aspect - 1); }
     let startPosX = -8;
-    let startPosY = 0.4;
-    let startPosZ = lerp(-6, -20, aspect - 1);
-    let startLookX = lerp(-3, -0.3, aspect - 1); 
+    let startPosY = yPosCalculation(aspect);
+    let startPosZ = zPosCalculation(aspect);
+    let startLookX = xLookCalculation(aspect); 
     let startLookY = 0.2;
     let startLookZ = 0;
-
-    //console.log("aspect: " + aspect, "startPosZ: " + startPosZ, "startLookX: " + startLookX);
-
     camera.position.set(startPosX, startPosY, startPosZ);
-    camera.lookAt(startLookX, startLookY, startLookZ);
+    camera.lookAt(startLookX, startLookY, startLookZ);*/
+    camera.lookAt(0, 0, 0);
+    
+
+    // On resize, adjust the camera 
+    window.addEventListener("resize", (e) => {
+        screenDimensions = {
+            width: e.target.innerWidth,
+            height: e.target.innerHeight
+        }
+        // Update the canvas container
+        threeDisplay.style.height = screenDimensions.height + "px";
+        renderer.domElement.style.width = screenDimensions.width + "px";
+        renderer.domElement.style.height = screenDimensions.height + "px";
+        // Update the aspect ratio in order to recalculate how to place the camera.
+        aspect = screenDimensions.width / screenDimensions.height;
+        /*startPosY = yPosCalculation(aspect); 
+        startPosZ = zPosCalculation(aspect);
+        startLookX = xLookCalculation(aspect); */
+        camera.position.set(startPosX, startPosY, startPosZ);
+        camera.lookAt(startLookX, startLookY, startLookZ);
+    });
 
     // Add water mesh
     const planeWidth = 4.8;
@@ -92,6 +139,54 @@ document.addEventListener("DOMContentLoaded", () => {
     table.rotation.z = THREE.Math.degToRad(270);
     objects.push(table);
     scene.add(table);
+
+    // Load the map model
+    let mapDiffuse = new THREE.TextureLoader().load("map_diffuse.jpg");
+    mapDiffuse.flipY = false;
+    let mapLightmap = new THREE.TextureLoader().load("map_lightmap.png");
+    mapLightmap.flipY = false;
+    new GLTFLoader().load( "./map.glb", function (object) {
+        // Create a glass-like material for the bottle
+        let map = object.scene.children[0];
+        map.material = new THREE.MeshLambertMaterial({
+            map: mapDiffuse,
+            lightMap: mapLightmap,
+            lightMapIntensity: lightMapIntensity,
+            side: THREE.DoubleSide
+        });
+        //map.position.x = 2.25;
+        map.position.x = -4;
+        map.position.y = -1.378;
+        map.rotation.y = THREE.Math.degToRad(260);
+        map.scale.set(10, 10, 10);
+        objects.push(map);
+        scene.add(map);
+    });
+
+    // Load pin model
+    let pinDiffuse = new THREE.TextureLoader().load("pin_diffuse.png");
+    pinDiffuse.flipY = false;
+    let pinLightmap = new THREE.TextureLoader().load("pin_lightmap.png");
+    pinLightmap.flipY = false;
+    new GLTFLoader().load( "./pin.glb", function (object) {
+        // Create a glass-like material for the bottle
+        let pin = object.scene.children[0];
+        pin.material = new THREE.MeshLambertMaterial({
+            map: pinDiffuse,
+            lightMap: pinLightmap,
+            lightMapIntensity: lightMapIntensity,
+            side: THREE.FrontSide
+        });
+        //map.position.x = 2.25;
+        pin.position.x = -3.65;
+        pin.position.y = -1.1;
+        pin.position.z = -0.38;
+        pin.rotation.x = THREE.Math.degToRad(345);
+       // pin.rotation.z = THREE.Math.degToRad(5);
+        pin.scale.set(1.5, 1.5, 1.5);
+        objects.push(pin);
+        scene.add(pin);
+    });
     
     // Load the bottle model
     new GLTFLoader().load( "./bottle.glb", function (object) {
@@ -225,10 +320,11 @@ document.addEventListener("DOMContentLoaded", () => {
     });
 
     // Setup dot wave backdrop
-    let backdropGeometry = new THREE.CylinderGeometry(30, 30, 20, 30, 1, true, THREE.Math.degToRad(300), THREE.Math.degToRad(220));
+    let backdropGeometry = new THREE.CylinderGeometry(30, 30, 40, 30, 1, true);
     let backdropMaterial = dotWaves();
     let backdrop = new THREE.Mesh(backdropGeometry, backdropMaterial);
     backdrop.position.y = 4;
+    backdrop.rotation.y = THREE.Math.degToRad(180);
     objects.push(backdrop);
     scene.add(backdrop);
 
@@ -239,38 +335,28 @@ document.addEventListener("DOMContentLoaded", () => {
     // Orbit controls
     /*const controls = new OrbitControls( camera, renderer.domElement );
     controls.minDistance = 3;
-    controls.maxDistance = 10;*/
+    controls.maxDistance = 50;*/
 
     //console.log("objects", objects);
 
     animate();
 
-    // On resize, adjust the camera 
-    window.addEventListener("resize", (e) => {
-        screenDimensions = {
-            width: e.target.innerWidth,
-            height: e.target.innerHeight
-        }
-        // Update the canvas container
-        threeDisplay.style.height = screenDimensions.height + "px";
-        renderer.domElement.style.width = screenDimensions.width + "px";
-        renderer.domElement.style.height = screenDimensions.height + "px";
-        // Update the aspect ratio in order to recalculate how to place the camera.
-        aspect = screenDimensions.width / screenDimensions.height; 
-        startPosZ = lerp(-6, -20, aspect - 1);
-        startLookX = lerp(-3, -0.3, aspect - 1); 
-        camera.position.set(startPosX, startPosY, startPosZ);
-        camera.lookAt(startLookX, startLookY, startLookZ);
-    });
+    function addCameraWobble(cameraPosition, time) {
+        return new THREE.Vector3(
+            cameraPosition.x + (Math.sin(time*3)/30),
+            cameraPosition.y + (Math.sin(time*1.4)/50),
+            cameraPosition.z + (Math.cos(time*2)/36)
+        )
+    }
     
     function animate (time) {
         requestAnimationFrame(animate);
         time *= 0.001; // Convert time to seconds.
 
         // Camera wobbles a bit
-        camera.position.x = startPosX + (Math.sin(time)/12);
+        /*camera.position.x = startPosX + (Math.sin(time)/12);
         camera.position.y = startPosY + (Math.sin(time/2)/14);
-        camera.position.z = startPosZ + (Math.cos(time+2)/16);
+        camera.position.z = startPosZ + (Math.cos(time+2)/16);*/
 
         // if the canvas's css dimensions and renderer resolution differs, resize the renderer to prevent blockiness.
         if (resizeRendererToDisplaySize(renderer)) {
@@ -290,7 +376,27 @@ document.addEventListener("DOMContentLoaded", () => {
         } );*/
 
         updateCubes(clouds, balls, time);
-        rockTheBoat(objects[7], time);
+        rockTheBoat(objects[9], time);
+        
+        newCameraPosition = positionDirector.update(time);
+        //console.log(newCameraPosition);
+        if (newCameraPosition) {
+            //newCameraPosition = addCameraWobble(newCameraPosition, time);
+            camera.position.x = newCameraPosition.x;
+            camera.position.y = newCameraPosition.y;
+            camera.position.z = newCameraPosition.z;
+        }
+
+        newCameraLookAt = lookAtDirector.update(time);
+        //console.log(newCameraLookAt);
+        console.log(lookAtDirector.getIndex());
+        if (newCameraLookAt) {
+            /*camera.lookAt.x = newCameraPosition.x;
+            camera.lookAt.y = newCameraPosition.y;
+            camera.lookAt.z = newCameraPosition.z;*/
+            newCameraLookAt = addCameraWobble(newCameraLookAt, time);
+            camera.lookAt(newCameraLookAt.x, newCameraLookAt.y, newCameraLookAt.z);
+        }
 
         renderer.render( scene, camera );
     };
@@ -346,6 +452,8 @@ document.addEventListener("DOMContentLoaded", () => {
             }
             `,
             fragmentShader: `
+            #define PI 3.14159265359
+
             // https://www.shadertoy.com/view/wt23Rt
             #define saturate2(v) clamp(v,0.,1.)
 
@@ -398,6 +506,10 @@ document.addEventListener("DOMContentLoaded", () => {
                 return smoothstep(dist, dist+blur, size);
             }
 
+            float doubleEase(float x) {
+                return 0.5 - (cos(x*2.0*PI)/2.0);
+            }
+
             void main()
             {
                 // Normalized pixel coordinates (from -0.5 to 0.5)
@@ -424,8 +536,9 @@ document.addEventListener("DOMContentLoaded", () => {
                 //vec3 fg = vec3(0.0, 0.5, 1.0); // sky blue
                 //vec3 bg = vec3(1.0, 1.0, 1.0); // transparent
 
-                float bgDist = distance(vec2(-0.1, -0.1), vec2(uv.x, uv.y));
-                vec3 bg = vec3(smoothstep(bgDist, bgDist+0.8, 1.0));
+                //float bgDist = distance(vec2(-0.1, -0.1), vec2(uv.x, uv.y));
+                //vec3 bg = vec3(smoothstep(bgDist, bgDist+0.8, 1.0));
+                vec3 bg = vec3(clamp(doubleEase(vUv.y), 0.3, 1.0));
                 gl_FragColor = vec4(mix(bg,fg,color), 1.0);
             }
             `,
@@ -619,53 +732,6 @@ document.addEventListener("DOMContentLoaded", () => {
         return material;
     }
 
-    function woodGrain() {
-        return new THREE.ShaderMaterial({
-            uniforms: {
-                time: { type: 'f', value: 1.0 },
-                lightmap: { type: 't', value: new THREE.TextureLoader().load("holder_lightmap.png") }
-            },
-            vertexShader: `
-            varying vec2 vUv; 
-            void main()
-            {
-                vUv = uv;
-                //vUv = ( uvTransform * vec3( uv, 1 ) ).xy;
-            
-                vec4 mvPosition = modelViewMatrix * vec4(position, 1.0 );
-                gl_Position = projectionMatrix * mvPosition;
-            }
-            `,
-            fragmentShader: `
-            // https://www.shadertoy.com/view/wt23Rt
-            #define saturate2(v) clamp(v,0.,1.)
-
-            uniform float time;
-            uniform sampler2D lightmap;
-            varying vec2 vUv;
-
-            void main()
-            {
-                // Normalized pixel coordinates (from -0.5 to 0.5)
-
-                vec3 color = vec3(0.7, 0.3, 0.5);
-                //gl_FragColor = vec4(color, 1.0);
-                gl_FragColor = texture2D(lightmap, vUv); 
-            }
-            `,
-            side: THREE.FrontSide
-        });
-    }
-
-    // Get the dimensions of a DOM element
-    /*function getElemDimensions(elem) {
-        var rect = elem.getBoundingClientRect();
-        return {
-            width: parseInt(rect.width),
-            height: parseInt(rect.height)
-        }
-    }*/
-
     function initMarchingCubeBallSeeds(totalBalls) {
         for (let i = 0; i < totalBalls; i++) {
             balls[i] = {
@@ -696,20 +762,6 @@ document.addEventListener("DOMContentLoaded", () => {
         canvas.style.height = screenDimensions.height + "px";
 
         return renderer;
-    }
-
-    // Linear interpolation between two values
-    // x and y are the two values to interpolate between
-    // t is the degree of interpolation between x and y.
-    function lerp(x, y, t) {
-        // Ensure t is normalized between 0 and 1.
-        if (t > 1) {
-            t = 1;
-        }
-        else if (t < 0) {
-            t = 0;
-        }
-        return x*t + y*(1-t);
     }
 
     // Fix blockiness by ensuring the size of the canvas's resolution matches with the canvas's css dimensions.
@@ -754,3 +806,141 @@ document.addEventListener("DOMContentLoaded", () => {
 
     }
 });
+
+// make an array of these, then keep moving through the array
+class CameraPlan {
+    // from: Vector3
+    // to: Vector3
+    // duration: int or float
+    // smooth: boolean (false for linear interpolation, true for smoothstep interpolation)
+    constructor(from, to, duration, stall, ease = false) {
+        // Points
+        this.from = from;
+        this.to = to;
+        // Time
+        this.duration = duration;
+        this.stall = stall; // how long to stall far at the end of the movement.
+        this.elapsed = 0;
+        this.initialTime = null;
+        // Boolean governing interpolation function
+        this.ease = ease;
+    }
+
+    /*duration() {
+        return this.duration;
+    }
+
+    get elapsed() {
+        return this.elapsed;
+    }
+
+    get from() {
+        return this.from;
+    }
+
+    get to() {
+        return this.to;
+    }*/
+
+    // Linear interpolation between two values
+    // x and y are the two values to interpolate between
+    // t is the degree of interpolation between x and y.
+    lerp (x, y, t) {
+        t = Math.max(0, Math.min(1, t)); // Ensure t is normalized between 0 and 1.
+        return y*t + x*(1-t);
+    }
+
+    easeInOutSine(x) {
+        return -(Math.cos(Math.PI * x) - 1) / 2;
+    }
+
+    reset() {
+        this.initialTime = null;
+    }
+
+    // If the update returns false, the pan has ended.
+    update(time) {
+        // If initialTime is null, we are beginning the animation. Record the initial time.
+        if (!this.initialTime) {
+            this.initialTime = time;
+        }
+
+        this.elapsed = time - this.initialTime;
+        let progress = this.elapsed/this.duration;
+        // If the total time elapsed isn't greater than the duration, then move the camera.
+        // Otherwise, return false and call reset().
+        if (progress < 1) {
+            if (this.ease) {
+                // Easing
+                return new THREE.Vector3( this.lerp(this.from.x, this.to.x, this.easeInOutSine(progress)),
+                                          this.lerp(this.from.y, this.to.y, this.easeInOutSine(progress)),
+                                          this.lerp(this.from.z, this.to.z, this.easeInOutSine(progress)) );
+            }
+            else {
+                // Linear interpolation
+                return new THREE.Vector3( this.lerp(this.from.x, this.to.x, progress),
+                                          this.lerp(this.from.y, this.to.y, progress),
+                                          this.lerp(this.from.z, this.to.z, progress) );
+            }
+        }
+        else if (this.elapsed < this.duration + this.stall) {
+            // Wait a little while after the movement completes.
+            return new THREE.Vector3( this.to.x, this.to.y, this.to.z );
+        }
+        else {
+            this.reset();
+            return false;
+        }
+    }
+}
+
+// A bunch of CameraPlans organized within this class.
+class CameraDirector {
+    // constructor takes an array of CameraPlans.
+    constructor (plans = null) {
+        this.plans = plans;
+        this.index = 0;
+    }
+
+    addPlan(plan) {
+        this.plans.push(plan);
+    }
+
+    getIndex() {
+        return this.index;
+    }
+
+    // Move onto the next CameraPlan in the plans array
+    next() {
+        if (this.index < this.plans.length - 1) {
+            this.index++;
+        }
+        else {
+            this.index = 0;
+        }
+    }
+
+    // Tell the director to switch to a different CameraPlan
+    setActive(index) {
+        if (index < this.plans.length && index >= 0) {
+            this.plans[this.index].reset();
+            this.index = index;
+        }
+        else {
+            console.error("Index " + index + " is out of bounds.");
+        }
+    }
+
+    update(time) {
+        let newPosition = this.plans[this.index].update(time);
+        if (newPosition) {
+            // Return the camera position as a Vector3.
+            return newPosition;
+        }
+        else {
+            // This CameraPlan reached its end. Move onto the next one.
+            this.next();
+        }
+    }
+
+}
