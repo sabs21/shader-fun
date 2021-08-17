@@ -11,13 +11,16 @@ document.addEventListener("DOMContentLoaded", () => {
     const objects = [];
     const balls = [];
     const lightMapIntensity = 1.25;
+    //let canvasDimensions = getElemDimensions(threeDisplay);
     let screenDimensions = {
         width: window.innerWidth || document.documentElement.clientWidth || document.body.clientWidth,
         height: window.innerHeight || document.documentElement.clientHeight || document.body.clientHeight
     }
     let newCameraPosition = null;
     let newCameraLookAt = null;
+    //console.log(screenDimensions);
 
+    //threeDisplay.height = screenDimensions.height + "px";
     threeDisplay.style.height = screenDimensions.height + "px";
 
     // Set the scene up
@@ -29,25 +32,44 @@ document.addEventListener("DOMContentLoaded", () => {
     const near = 0.1;
     const far = 100;
     const camera = new THREE.PerspectiveCamera(fov, aspect, near, far);
-    camera.lookAt(0, 0, 0);
+    //camera.up = new THREE.Vector3(0,0,1); // Set the up vector so that the lookAt function works as expected.
 
     // Establish camera positioning plans (camera panning)
-    let positionDirector = new CameraDirector();
-    positionDirector.addPlan(new CameraPlan(new THREE.Vector3(8, 1, 10), new THREE.Vector3(-4, 1, 10), 8, 0, false));
-    positionDirector.addPlan(new CameraPlan(new THREE.Vector3(8, 0.4, 6), new THREE.Vector3(10, 0.4, 8), 6, 0, true));
-    positionDirector.addPlan(new CameraPlan(new THREE.Vector3(-8, 0.4, -6), new THREE.Vector3(-8, 0.4, -6), 1, 4, false));
-    positionDirector.addPlan(new CameraPlan(new THREE.Vector3(-8, 0.4, -6), new THREE.Vector3(-8, 2, -3), 5, 5, true));
-    positionDirector.addPlan(new CameraPlan(new THREE.Vector3(-9, 8, -18), new THREE.Vector3(-4, 6, 0), 8, 0, false));
+    let positionPlans = [];
+    //positionPlans[0] = new CameraPlan(new THREE.Vector3(-1, 1, 1), new THREE.Vector3(-1, 3, 1), 5, 5, true);
+    positionPlans[0] = new CameraPlan(new THREE.Vector3(8, 1, 10), new THREE.Vector3(-4, 1, 10), 8, 0, false);
+    positionPlans[1] = new CameraPlan(new THREE.Vector3(8, 0.4, 6), new THREE.Vector3(10, 0.4, 8), 6, 0, true);
+    positionPlans[2] = new CameraPlan(new THREE.Vector3(-8, 0.4, -6), new THREE.Vector3(-8, 0.4, -6), 1, 4, false);
+    positionPlans[3] = new CameraPlan(new THREE.Vector3(-8, 0.4, -6), new THREE.Vector3(-8, 2, -3), 5, 5, true);
+    positionPlans[4] = new CameraPlan(new THREE.Vector3(-9, 8, -18), new THREE.Vector3(-4, 6, 0), 8, 0, false);
+    //positionPlans[5] = new CameraPlan(new THREE.Vector3(0, 6, 0), new THREE.Vector3(0, 8, 0), 10, 0, true);
+    let positionDirector = new CameraDirector(positionPlans);
 
     // Establish camera lookAt plans (camera focal point)
-    // For a smooth pan, take the movement and subtract the 'to' movement with the 'from' movement. Add this number to the 'from' lookAt numbers. 
-    // I.e.: lookAtTo = new THREE.Vector3((posTo.x - posFrom.x) + lookAtFrom.x, (posTo.y - posFrom.y) + lookAtFrom.y, (posTo.z - posFrom.z) + lookAtFrom.z)
-    let lookAtDirector = new CameraDirector();
-    lookAtDirector.addPlan(new CameraPlan(new THREE.Vector3(5, 0, 0), new THREE.Vector3(-12, 0, 0), 8, 0, false));
-    lookAtDirector.addPlan(new CameraPlan(new THREE.Vector3(0, 0, 0), new THREE.Vector3(0, 0, 0), 6, 0, true));
-    lookAtDirector.addPlan(new CameraPlan(new THREE.Vector3(-3, 0.2, 0), new THREE.Vector3(-3, 0.2, 0), 1, 4, false));
-    lookAtDirector.addPlan(new CameraPlan(new THREE.Vector3(-3, 0.2, 0), new THREE.Vector3(-5, 0, -1.5), 5, 5, true));
-    lookAtDirector.addPlan(new CameraPlan(new THREE.Vector3(-2, 0, -9), new THREE.Vector3(3, -2, 9), 8, 0, false));
+    let lookAtPlans = [];
+    //lookAtPlans[0] = new CameraPlan(new THREE.Vector3(0, 0, 0), new THREE.Vector3(0, 0, 0), 5, 5, true);
+    lookAtPlans[0] = new CameraPlan(new THREE.Vector3(5, 0, 0), new THREE.Vector3(-12, 0, 0), 8, 0, false);
+    lookAtPlans[1] = new CameraPlan(new THREE.Vector3(0, 0, 0), new THREE.Vector3(0, 0, 0), 6, 0, true);
+    lookAtPlans[2] = new CameraPlan(new THREE.Vector3(-3, 0.2, 0), new THREE.Vector3(-3, 0.2, 0), 1, 4, false);
+    lookAtPlans[3] = new CameraPlan(new THREE.Vector3(-3, 0.2, 0), new THREE.Vector3(-5, 0, -1.5), 5, 5, true);
+    lookAtPlans[4] = new CameraPlan(new THREE.Vector3(-2, 0, -9), new THREE.Vector3(3, -2, 9), 8, 0, false); // For a smooth pan, take the movement and subtract the to movement with the from movement. Add this number to the from lookAt numbers. (I.e., lookAtTo = new THREE.Vector3((posTo.x - posFrom.x) + lookAtFrom.x, (posTo.y - posFrom.y) + lookAtFrom.y, (posTo.z - posFrom.z) + lookAtFrom.z)
+    //lookAtPlans[5] = new CameraPlan(new THREE.Vector3(99, 7, 0), new THREE.Vector3(0, 7, 99), 10, 0, false);
+    let lookAtDirector = new CameraDirector(lookAtPlans);
+
+    // Camera's initial position and where it's pointed
+    /*let yPosCalculation = (aspect) => { return lerp(0.6, 1.6, aspect - 1); }
+    let zPosCalculation = (aspect) => { return lerp(-6, -15, aspect - 1); }
+    let xLookCalculation = (aspect) => { return lerp(-3, -0.3, aspect - 1); }
+    let startPosX = -8;
+    let startPosY = yPosCalculation(aspect);
+    let startPosZ = zPosCalculation(aspect);
+    let startLookX = xLookCalculation(aspect); 
+    let startLookY = 0.2;
+    let startLookZ = 0;
+    camera.position.set(startPosX, startPosY, startPosZ);
+    camera.lookAt(startLookX, startLookY, startLookZ);*/
+    camera.lookAt(0, 0, 0);
+    
 
     // On resize, adjust the camera 
     window.addEventListener("resize", (e) => {
@@ -121,6 +143,7 @@ document.addEventListener("DOMContentLoaded", () => {
         let mapGeometry = map.children[0].geometry;
         let mapUVArr = mapGeometry.getAttribute("uv").array;
         mapGeometry.setAttribute('uv2', new THREE.BufferAttribute( mapUVArr, 2 ));
+
         map.material = new THREE.MeshLambertMaterial({
             map: mapDiffuse,
             lightMap: mapLightmap,
@@ -128,6 +151,8 @@ document.addEventListener("DOMContentLoaded", () => {
             side: THREE.DoubleSide
         });
         let bakedMap = new THREE.Mesh(mapGeometry, map.material);
+
+        //map.position.x = 2.25;
         bakedMap.position.x = -4;
         bakedMap.position.y = -1.378;
         bakedMap.rotation.y = THREE.Math.degToRad(260);
@@ -153,11 +178,13 @@ document.addEventListener("DOMContentLoaded", () => {
             side: THREE.FrontSide
         });
         let bakedPin = new THREE.Mesh(pinGeometry, pin.material);
+        //map.position.x = 2.25;
         bakedPin.position.x = -3.65;
         bakedPin.position.y = -1.05;
         bakedPin.position.z = -0.38;
         bakedPin.rotation.x = THREE.Math.degToRad(165);
-        bakedPin.scale.set(1.5, 1.5, 1.5);
+       // pin.rotation.z = THREE.Math.degToRad(5);
+       bakedPin.scale.set(1.5, 1.5, 1.5);
         objects.push(bakedPin);
         scene.add(bakedPin);
     });
@@ -167,14 +194,17 @@ document.addEventListener("DOMContentLoaded", () => {
         // Create a glass-like material for the bottle
         let bottle = object.scene.children[0];
         bottle.material = new THREE.MeshPhysicalMaterial({
+            //color: 0xf42342,
             metalness: .4,
             roughness: .0,
             emissive: 0xffecab,
             emissiveIntensity: 0.2,
+            //envMap: envmap.texture,
             envMapIntensity: 1.0,
             clearcoat: 0.9,
             clearcoatRoughness: 0.1,
             transparent: true,
+            //transmission: .95,
             opacity: 0.5,
             reflectivity: 0.2,
             refractionRatio: 0.985,
@@ -199,6 +229,7 @@ document.addEventListener("DOMContentLoaded", () => {
             lightMap: corkLightmap,
             lightMapIntensity: lightMapIntensity,
         });
+
         let bakedCork = new THREE.Mesh(corkGeometry, cork.material);
         bakedCork.position.x = -3.2;
         bakedCork.position.y = 0.5;
@@ -233,6 +264,85 @@ document.addEventListener("DOMContentLoaded", () => {
     clouds.scale.set( 2.7, 1, 1 );
     scene.add( clouds );
 
+    /*let lampDiffuse = new THREE.TextureLoader().load("lamp_diffuse.png");
+    lampDiffuse.flipY = false;
+    let lampLightmap = new THREE.TextureLoader().load("lamp_lightmap.jpg");
+    lampLightmap.flipY = false;*/
+    /*let hurricaneLampLightmap = new THREE.TextureLoader().load("hurricane_lamp_lightmap.jpg");
+    hurricaneLampLightmap.flipY = false;
+    new GLTFLoader().load( "./hurricane_lantern.glb", function (object) {
+        let hurricaneLamp = object.scene;
+
+        // Import the base
+        let lampBaseGeometry = hurricaneLamp.children[0].geometry;
+        let lampBaseUVArr = lampBaseGeometry.getAttribute("uv").array;
+        lampBaseGeometry.setAttribute('uv2', new THREE.BufferAttribute( lampBaseUVArr, 2 ));
+        let lampBaseMaterial = new THREE.MeshLambertMaterial({
+            color: 0x1258f0,
+            lightMap: hurricaneLampLightmap,
+            lightMapIntensity: lightMapIntensity
+            //specular: 0x43431e,
+            //shininess: 1
+            //lightMap: tableLightmap,
+            //lightMapIntensity: lightMapIntensity,
+        });
+        let lampBase = new THREE.Mesh(lampBaseGeometry, lampBaseMaterial);
+        //lampBase.position.y = -1.313;
+        lampBase.position.y = -1.313;
+        lampBase.position.z = -3;
+        objects.push(lampBase);
+        scene.add(lampBase);
+
+        // Import the glass
+        let glassGeometry = hurricaneLamp.children[1].geometry;
+        let glassUVArr = glassGeometry.getAttribute("uv").array;
+        glassGeometry.setAttribute('uv2', new THREE.BufferAttribute( glassUVArr, 2 ));
+        let glassMaterial = new THREE.MeshPhysicalMaterial({
+            //color: 0xf42342,
+            metalness: .4,
+            roughness: .0,
+            emissive: 0xffecab,
+            emissiveIntensity: 0.2,
+            //envMap: envmap.texture,
+            envMapIntensity: 1.0,
+            clearcoat: 0.9,
+            clearcoatRoughness: 0.1,
+            transparent: true,
+            //transmission: .95,
+            opacity: 0.5,
+            reflectivity: 0.2,
+            refractionRatio: 0.985,
+            ior: 0.9,
+            side: THREE.DoubleSide,
+        });
+        let glass = new THREE.Mesh(glassGeometry, glassMaterial);
+        //glass.scale.set(0.44, 0.44, 0.44);
+        glass.position.y = -1.313;
+        glass.position.z = -3;
+        objects.push(glass);
+        scene.add(glass);
+
+        // Import the bands
+        let bandsGeometry = hurricaneLamp.children[2].geometry;
+        let bandsUVArr = bandsGeometry.getAttribute("uv").array;
+        bandsGeometry.setAttribute('uv2', new THREE.BufferAttribute( bandsUVArr, 2 ));
+        let bandsMaterial = new THREE.MeshLambertMaterial({
+            color: 0xffd700,
+            lightMap: hurricaneLampLightmap,
+            lightMapIntensity: lightMapIntensity
+            //specular: 0x43431e,
+            //shininess: 1
+            //lightMap: tableLightmap,
+            //lightMapIntensity: lightMapIntensity,
+        });
+        let bands = new THREE.Mesh(bandsGeometry, bandsMaterial);
+        //bands.scale.set(0.9, 0.9, 0.9);
+        bands.position.y = -1.313;
+        bands.position.z = -3;
+        objects.push(bands);
+        scene.add(bands);
+    });*/
+
     // Load the lamp model
     let lampDiffuse = new THREE.TextureLoader().load("lamp_diffuse.png");
     lampDiffuse.flipY = false;
@@ -240,9 +350,11 @@ document.addEventListener("DOMContentLoaded", () => {
     lampLightmap.flipY = false;
     new GLTFLoader().load( "./lamp.glb", function (object) {
         let lamp = object.scene;
+
         let lampGeometry = lamp.children[0].geometry;
         let lampUVArr = lampGeometry.getAttribute("uv").array;
         lampGeometry.setAttribute('uv2', new THREE.BufferAttribute( lampUVArr, 2 ));
+
         lamp.material = new THREE.MeshLambertMaterial({
             map: lampDiffuse,
             lightMap: lampLightmap,
@@ -267,9 +379,11 @@ document.addEventListener("DOMContentLoaded", () => {
     shipLightmap.flipY = false;
     new GLTFLoader().load( "./ship.glb", function (object) {
         let ship = object.scene;
+
         let shipGeometry = ship.children[0].geometry;
         let shipUVArr = shipGeometry.getAttribute("uv").array;
         shipGeometry.setAttribute('uv2', new THREE.BufferAttribute( shipUVArr, 2 ));
+
         ship.material = new THREE.MeshLambertMaterial({
             map: shipDiffuse,
             lightMap: shipLightmap,
@@ -298,6 +412,13 @@ document.addEventListener("DOMContentLoaded", () => {
     const renderer = initRenderer();
     threeDisplay.appendChild( renderer.domElement );
 
+    // Orbit controls
+    /*const controls = new OrbitControls( camera, renderer.domElement );
+    controls.minDistance = 3;
+    controls.maxDistance = 50;*/
+
+    //console.log("objects", objects);
+
     animate();
 
     function addCameraWobble(cameraPosition, time) {
@@ -312,6 +433,11 @@ document.addEventListener("DOMContentLoaded", () => {
         requestAnimationFrame(animate);
         time *= 0.001; // Convert time to seconds.
 
+        // Camera wobbles a bit
+        /*camera.position.x = startPosX + (Math.sin(time)/12);
+        camera.position.y = startPosY + (Math.sin(time/2)/14);
+        camera.position.z = startPosZ + (Math.cos(time+2)/16);*/
+
         // if the canvas's css dimensions and renderer resolution differs, resize the renderer to prevent blockiness.
         if (resizeRendererToDisplaySize(renderer)) {
             // Fix distortions when canvas gets resized
@@ -320,19 +446,34 @@ document.addEventListener("DOMContentLoaded", () => {
             camera.updateProjectionMatrix();
         }
         backdrop.material.uniforms.time.value = time;
-        
+        /*scene.traverse( function ( child ) {
+            if ( child.isMesh ) {
+                const shader = child.material.userData.shader;
+                if ( shader ) {
+                    shader.uniforms.time.value = time;
+                }
+            }
+        } );*/
+
         updateCubes(clouds, balls, time);
         rockTheBoat(objects[11], time);
         
         newCameraPosition = positionDirector.update(time);
+        //console.log(newCameraPosition);
         if (newCameraPosition) {
+            //newCameraPosition = addCameraWobble(newCameraPosition, time);
             camera.position.x = newCameraPosition.x;
             camera.position.y = newCameraPosition.y;
             camera.position.z = newCameraPosition.z;
         }
 
         newCameraLookAt = lookAtDirector.update(time);
+        //console.log(newCameraLookAt);
+        console.log(lookAtDirector.getIndex());
         if (newCameraLookAt) {
+            /*camera.lookAt.x = newCameraPosition.x;
+            camera.lookAt.y = newCameraPosition.y;
+            camera.lookAt.z = newCameraPosition.z;*/
             newCameraLookAt = addCameraWobble(newCameraLookAt, time);
             camera.lookAt(newCameraLookAt.x, newCameraLookAt.y, newCameraLookAt.z);
         }
@@ -345,7 +486,9 @@ document.addEventListener("DOMContentLoaded", () => {
         material.onBeforeCompile = function ( shader ) {
             shader.uniforms.colorTop = { value: colorTop };
             shader.uniforms.colorBottom = { value: colorBottom };
+            //shader.vertexShader.replace(
 
+            //)
             // Fragment Code
             shader.fragmentShader = shader.fragmentShader.replace(
                 `#include <clipping_planes_pars_fragment>`,
@@ -359,6 +502,8 @@ document.addEventListener("DOMContentLoaded", () => {
                 `vec3 cloudGradient = mix(colorBottom, colorTop, normal.y);
                 gl_FragColor = vec4( cloudGradient, opacity );`,
             );
+
+            //console.log(shader);
 
             material.userData.shader = shader;
         }
@@ -654,6 +799,8 @@ document.addEventListener("DOMContentLoaded", () => {
                 vec4 diffuseColor = vec4( newDiffuse, opacity );`,
             );
 
+            //console.log(shader);
+
             material.userData.shader = shader;
         }
 
@@ -682,6 +829,9 @@ document.addEventListener("DOMContentLoaded", () => {
             precision: "mediump"
         });
         renderer.setClearColor( 0x000000, 0);
+        //renderer.physicallyCorrectLights = true;
+        //renderer.shadowMap.enabled = true;
+        //renderer.shadowMap.type = THREE.PCFSoftShadowMap;
         renderer.outputEncoding = THREE.sRGBEncoding;
         renderer.toneMapping = THREE.ACESFilmicToneMapping;
         renderer.toneMappingExposure = 0.8;
@@ -742,8 +892,7 @@ class CameraPlan {
     // from: Vector3
     // to: Vector3
     // duration: int or float
-    // stall: int or float
-    // ease: boolean (false for linear interpolation, true for smoothstep interpolation)
+    // smooth: boolean (false for linear interpolation, true for smoothstep interpolation)
     constructor(from, to, duration, stall, ease = false) {
         // Points
         this.from = from;
@@ -756,6 +905,22 @@ class CameraPlan {
         // Boolean governing interpolation function
         this.ease = ease;
     }
+
+    /*duration() {
+        return this.duration;
+    }
+
+    get elapsed() {
+        return this.elapsed;
+    }
+
+    get from() {
+        return this.from;
+    }
+
+    get to() {
+        return this.to;
+    }*/
 
     // Linear interpolation between two values
     // x and y are the two values to interpolate between
@@ -813,7 +978,7 @@ class CameraPlan {
 class CameraDirector {
     // constructor takes an array of CameraPlans.
     constructor (plans = null) {
-        this.plans = plans ? plans : []; // If plans is null, make an empty array.
+        this.plans = plans;
         this.index = 0;
     }
 
