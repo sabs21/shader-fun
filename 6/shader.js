@@ -1,6 +1,7 @@
 import * as THREE from "./three.module.js";
 import { OrbitControls } from './examples/jsm/controls/OrbitControls.js';
-import { Water } from './examples/jsm/objects/Water2.js';
+import { Water } from './examples/jsm/objects/Water.js';
+import { Water2 } from './examples/jsm/objects/Water2.js';
 import { GLTFLoader } from './examples/jsm/loaders/GLTFLoader.js';
 import { MarchingCubes } from './examples/jsm/objects/MarchingCubes.js';
 
@@ -8,19 +9,20 @@ document.addEventListener("DOMContentLoaded", () => {
     const threeDisplay = document.getElementById("threeDisplay");
 
     // Globals
-    const objects = [];
     const balls = [];
     const lightMapIntensity = 1.25;
-    //let canvasDimensions = getElemDimensions(threeDisplay);
+    const isOrbitCameraOn = true;
     let screenDimensions = {
         width: window.innerWidth || document.documentElement.clientWidth || document.body.clientWidth,
         height: window.innerHeight || document.documentElement.clientHeight || document.body.clientHeight
     }
-    let newCameraPosition = null;
-    let newCameraLookAt = null;
-    //console.log(screenDimensions);
+    let objects = [];
+    let newCameraPosition = null; // For movement CameraDirector
+    let newCameraLookAt = null; // For lookAt CameraDirector
+    let controls = null;
+    let positionDirector = null;
+    let lookAtDirector = null;
 
-    //threeDisplay.height = screenDimensions.height + "px";
     threeDisplay.style.height = screenDimensions.height + "px";
 
     // Set the scene up
@@ -32,44 +34,8 @@ document.addEventListener("DOMContentLoaded", () => {
     const near = 0.1;
     const far = 100;
     const camera = new THREE.PerspectiveCamera(fov, aspect, near, far);
-    //camera.up = new THREE.Vector3(0,0,1); // Set the up vector so that the lookAt function works as expected.
-
-    // Establish camera positioning plans (camera panning)
-    let positionPlans = [];
-    //positionPlans[0] = new CameraPlan(new THREE.Vector3(-1, 1, 1), new THREE.Vector3(-1, 3, 1), 5, 5, true);
-    positionPlans[0] = new CameraPlan(new THREE.Vector3(8, 1, 10), new THREE.Vector3(-4, 1, 10), 8, 0, false);
-    positionPlans[1] = new CameraPlan(new THREE.Vector3(8, 0.4, 6), new THREE.Vector3(10, 0.4, 8), 6, 0, true);
-    positionPlans[2] = new CameraPlan(new THREE.Vector3(-8, 0.4, -6), new THREE.Vector3(-8, 0.4, -6), 1, 4, false);
-    positionPlans[3] = new CameraPlan(new THREE.Vector3(-8, 0.4, -6), new THREE.Vector3(-8, 2, -3), 5, 5, true);
-    positionPlans[4] = new CameraPlan(new THREE.Vector3(-9, 8, -18), new THREE.Vector3(-4, 6, 0), 8, 0, false);
-    //positionPlans[5] = new CameraPlan(new THREE.Vector3(0, 6, 0), new THREE.Vector3(0, 8, 0), 10, 0, true);
-    let positionDirector = new CameraDirector(positionPlans);
-
-    // Establish camera lookAt plans (camera focal point)
-    let lookAtPlans = [];
-    //lookAtPlans[0] = new CameraPlan(new THREE.Vector3(0, 0, 0), new THREE.Vector3(0, 0, 0), 5, 5, true);
-    lookAtPlans[0] = new CameraPlan(new THREE.Vector3(5, 0, 0), new THREE.Vector3(-12, 0, 0), 8, 0, false);
-    lookAtPlans[1] = new CameraPlan(new THREE.Vector3(0, 0, 0), new THREE.Vector3(0, 0, 0), 6, 0, true);
-    lookAtPlans[2] = new CameraPlan(new THREE.Vector3(-3, 0.2, 0), new THREE.Vector3(-3, 0.2, 0), 1, 4, false);
-    lookAtPlans[3] = new CameraPlan(new THREE.Vector3(-3, 0.2, 0), new THREE.Vector3(-5, 0, -1.5), 5, 5, true);
-    lookAtPlans[4] = new CameraPlan(new THREE.Vector3(-2, 0, -9), new THREE.Vector3(3, -2, 9), 8, 0, false); // For a smooth pan, take the movement and subtract the to movement with the from movement. Add this number to the from lookAt numbers. (I.e., lookAtTo = new THREE.Vector3((posTo.x - posFrom.x) + lookAtFrom.x, (posTo.y - posFrom.y) + lookAtFrom.y, (posTo.z - posFrom.z) + lookAtFrom.z)
-    //lookAtPlans[5] = new CameraPlan(new THREE.Vector3(99, 7, 0), new THREE.Vector3(0, 7, 99), 10, 0, false);
-    let lookAtDirector = new CameraDirector(lookAtPlans);
-
-    // Camera's initial position and where it's pointed
-    /*let yPosCalculation = (aspect) => { return lerp(0.6, 1.6, aspect - 1); }
-    let zPosCalculation = (aspect) => { return lerp(-6, -15, aspect - 1); }
-    let xLookCalculation = (aspect) => { return lerp(-3, -0.3, aspect - 1); }
-    let startPosX = -8;
-    let startPosY = yPosCalculation(aspect);
-    let startPosZ = zPosCalculation(aspect);
-    let startLookX = xLookCalculation(aspect); 
-    let startLookY = 0.2;
-    let startLookZ = 0;
-    camera.position.set(startPosX, startPosY, startPosZ);
-    camera.lookAt(startLookX, startLookY, startLookZ);*/
+    camera.position.set(0, 2, 3);
     camera.lookAt(0, 0, 0);
-    
 
     // On resize, adjust the camera 
     window.addEventListener("resize", (e) => {
@@ -83,29 +49,6 @@ document.addEventListener("DOMContentLoaded", () => {
         renderer.domElement.style.height = screenDimensions.height + "px";
     });
 
-    // Add water mesh
-    const planeWidth = 4.8;
-    const planeHeight = 1.9;  
-    const planeSegments = 48;   
-    const planeGeometry = new THREE.PlaneGeometry(planeWidth, planeHeight, planeSegments, planeSegments);
-    let water = new Water( planeGeometry, {
-        color: '#77a6ff',
-        scale: 0.4,
-        reflectivity: 0.1,
-        flowDirection: new THREE.Vector2( 1, 1 ),
-        textureWidth: 1024,
-        textureHeight: 1024,
-        roundOffCenter: new THREE.Vector2(-1.65, 0),
-        roundOffRadiusX: 0.96,
-        roundOffRadiusZ: 0.6,
-    } );
-    water.rotation.x = THREE.Math.degToRad(270);
-    water.position.x = -0.1;
-    water.position.y = -0.3;
-    water.renderOrder = 1; // allows the water to be visible through the bottle
-    objects.push(water);
-    scene.add(water);
-    
     // Skybox
     const cubeTextureLoader = new THREE.CubeTextureLoader();
     cubeTextureLoader.setPath( './textures/cube/apartment/' );
@@ -116,8 +59,59 @@ document.addEventListener("DOMContentLoaded", () => {
     ] );
     scene.environment = cubeTexture;
 
+    // Lighting
+    let hemisphereLight = new THREE.HemisphereLight( 0xfff3c6, 0x414d63, 1 );
+    scene.add(hemisphereLight);
+
+    {
+        // Water in the bottle
+        //const width = 4.8;
+        //const height = 1.9;
+        const width = 1.9;
+        const height = 4.4;
+        const segments = 48;   
+        const geometry = new THREE.PlaneGeometry(width, height, segments, segments);
+        let bottleWater = new Water2( geometry, {
+            color: '#77a6ff',
+            scale: 0.4,
+            reflectivity: 0.1,
+            flowDirection: new THREE.Vector2( 1, 1 ),
+            textureWidth: 1024,
+            textureHeight: 1024,
+            roundness: 0.1,
+        } );
+        bottleWater.rotation.x = THREE.Math.degToRad(270);
+        bottleWater.rotation.z = THREE.Math.degToRad(280);
+        bottleWater.position.set(0.44, 2.023, -2.09);
+        bottleWater.scale.set(0.1, 0.1, 0.1);
+        bottleWater.renderOrder = 1; // allows the water to be visible through the bottle
+        objects.push(bottleWater);
+        scene.add(bottleWater);
+    }
+    
+    {
+        // Ocean
+        const width = 100;
+        const height = 100;  
+        const segments = 200;   
+        const geometry = new THREE.PlaneGeometry(width, height, segments, segments);
+        let ocean = new Water( geometry, {
+            color: '#77a6ff',
+            scale: 25,
+            reflectivity: 0.1,
+            flowDirection: new THREE.Vector2( -1, 1 ),
+            textureWidth: 512,
+            textureHeight: 512,
+        } );
+        ocean.rotation.x = THREE.Math.degToRad(270);
+        ocean.position.set(0, 0, -50);
+        ocean.renderOrder = 1; // allows the water to be visible through the bottle
+        objects.push(ocean);
+        scene.add(ocean);
+    }
+
     // Add the table top
-    let tableGeometry = new THREE.PlaneGeometry(30, 30, 1, 1);
+    /*let tableGeometry = new THREE.PlaneGeometry(30, 30, 1, 1);
     let tableUVArr = tableGeometry.getAttribute("uv").array; 
     tableGeometry.setAttribute('uv2', new THREE.BufferAttribute( tableUVArr, 2 )); // create another uv map for the lightmap to use.
     let tableLightmap = new THREE.TextureLoader().load("table_lightmap.jpg");
@@ -250,7 +244,7 @@ document.addEventListener("DOMContentLoaded", () => {
         holder.position.z = 0.09;
         objects.push(holder);
         scene.add(holder);
-    });
+    });*/
 
     // Clouds (Marching Cubes)
     const cloudResolution = 16;
@@ -260,55 +254,45 @@ document.addEventListener("DOMContentLoaded", () => {
     const totalBalls = 7;
     initMarchingCubeBallSeeds(totalBalls); // Give each ball a random seed so that each ball's movement pattern differs.
     const clouds = new MarchingCubes( cloudResolution, cloudMaterial, false, false );
-    clouds.position.set( 0.2, 1.2, 0 );
-    clouds.scale.set( 2.7, 1, 1 );
+    clouds.position.set( 0.46, 2.18, -2.10 );
+    clouds.rotation.y = THREE.Math.degToRad(10);
+    clouds.scale.set( 0.27, 0.1, 0.1 );
     scene.add( clouds );
 
-    /*let lampDiffuse = new THREE.TextureLoader().load("lamp_diffuse.png");
-    lampDiffuse.flipY = false;
-    let lampLightmap = new THREE.TextureLoader().load("lamp_lightmap.jpg");
-    lampLightmap.flipY = false;*/
-    /*let hurricaneLampLightmap = new THREE.TextureLoader().load("hurricane_lamp_lightmap.jpg");
-    hurricaneLampLightmap.flipY = false;
+    // Load the hurricane lantern
+    /*let hurricaneLanternLightmap = new THREE.TextureLoader().load("hurricane_lamp_lightmap.jpg");
+    hurricaneLanternLightmap.flipY = false;
     new GLTFLoader().load( "./hurricane_lantern.glb", function (object) {
-        let hurricaneLamp = object.scene;
+        let hurricaneLantern = object.scene;
 
         // Import the base
-        let lampBaseGeometry = hurricaneLamp.children[0].geometry;
+        let lampBaseGeometry = hurricaneLantern.children[0].geometry;
         let lampBaseUVArr = lampBaseGeometry.getAttribute("uv").array;
         lampBaseGeometry.setAttribute('uv2', new THREE.BufferAttribute( lampBaseUVArr, 2 ));
         let lampBaseMaterial = new THREE.MeshLambertMaterial({
             color: 0x1258f0,
-            lightMap: hurricaneLampLightmap,
-            lightMapIntensity: lightMapIntensity
-            //specular: 0x43431e,
-            //shininess: 1
-            //lightMap: tableLightmap,
-            //lightMapIntensity: lightMapIntensity,
+            specular: 0x43431e,
+            shininess: 1
         });
         let lampBase = new THREE.Mesh(lampBaseGeometry, lampBaseMaterial);
-        //lampBase.position.y = -1.313;
         lampBase.position.y = -1.313;
         lampBase.position.z = -3;
         objects.push(lampBase);
         scene.add(lampBase);
 
         // Import the glass
-        let glassGeometry = hurricaneLamp.children[1].geometry;
+        let glassGeometry = hurricaneLantern.children[1].geometry;
         let glassUVArr = glassGeometry.getAttribute("uv").array;
         glassGeometry.setAttribute('uv2', new THREE.BufferAttribute( glassUVArr, 2 ));
         let glassMaterial = new THREE.MeshPhysicalMaterial({
-            //color: 0xf42342,
             metalness: .4,
             roughness: .0,
             emissive: 0xffecab,
             emissiveIntensity: 0.2,
-            //envMap: envmap.texture,
             envMapIntensity: 1.0,
             clearcoat: 0.9,
             clearcoatRoughness: 0.1,
             transparent: true,
-            //transmission: .95,
             opacity: 0.5,
             reflectivity: 0.2,
             refractionRatio: 0.985,
@@ -316,24 +300,17 @@ document.addEventListener("DOMContentLoaded", () => {
             side: THREE.DoubleSide,
         });
         let glass = new THREE.Mesh(glassGeometry, glassMaterial);
-        //glass.scale.set(0.44, 0.44, 0.44);
         glass.position.y = -1.313;
         glass.position.z = -3;
         objects.push(glass);
         scene.add(glass);
 
         // Import the bands
-        let bandsGeometry = hurricaneLamp.children[2].geometry;
+        let bandsGeometry = hurricaneLantern.children[2].geometry;
         let bandsUVArr = bandsGeometry.getAttribute("uv").array;
         bandsGeometry.setAttribute('uv2', new THREE.BufferAttribute( bandsUVArr, 2 ));
         let bandsMaterial = new THREE.MeshLambertMaterial({
             color: 0xffd700,
-            lightMap: hurricaneLampLightmap,
-            lightMapIntensity: lightMapIntensity
-            //specular: 0x43431e,
-            //shininess: 1
-            //lightMap: tableLightmap,
-            //lightMapIntensity: lightMapIntensity,
         });
         let bands = new THREE.Mesh(bandsGeometry, bandsMaterial);
         //bands.scale.set(0.9, 0.9, 0.9);
@@ -341,35 +318,6 @@ document.addEventListener("DOMContentLoaded", () => {
         bands.position.z = -3;
         objects.push(bands);
         scene.add(bands);
-    });*/
-
-    // Load the lamp model
-    let lampDiffuse = new THREE.TextureLoader().load("lamp_diffuse.png");
-    lampDiffuse.flipY = false;
-    let lampLightmap = new THREE.TextureLoader().load("lamp_lightmap.jpg");
-    lampLightmap.flipY = false;
-    new GLTFLoader().load( "./lamp.glb", function (object) {
-        let lamp = object.scene;
-
-        let lampGeometry = lamp.children[0].geometry;
-        let lampUVArr = lampGeometry.getAttribute("uv").array;
-        lampGeometry.setAttribute('uv2', new THREE.BufferAttribute( lampUVArr, 2 ));
-
-        lamp.material = new THREE.MeshLambertMaterial({
-            map: lampDiffuse,
-            lightMap: lampLightmap,
-            lightMapIntensity: lightMapIntensity,
-        });
-        let bakedLamp = new THREE.Mesh(lampGeometry, lamp.material);
-        bakedLamp.scale.x = 2;
-        bakedLamp.scale.y = 2;
-        bakedLamp.scale.z = 2;
-        bakedLamp.position.x = 8.95;
-        bakedLamp.position.y = -1.313;
-        bakedLamp.position.z = 11;
-        bakedLamp.rotation.y = THREE.Math.degToRad(204);
-        objects.push(bakedLamp);
-        scene.add(bakedLamp);
     });
 
     // Load the ship model
@@ -406,19 +354,97 @@ document.addEventListener("DOMContentLoaded", () => {
     backdrop.position.y = 4;
     backdrop.rotation.y = THREE.Math.degToRad(180);
     objects.push(backdrop);
-    scene.add(backdrop);
+    scene.add(backdrop);*/
+
+    /*new GLTFLoader().load( "./scene2.glb", function (object) {
+        object.scene.children.forEach(prop => objects.push(prop)); // Add all props from the scene into the objects array.
+        scene.add(object.scene);
+    });*/
+    loadScene("./scene2.glb")
+    .then((sceneObjects) => {
+        // Merge both object arrays into one using the spread operator.
+        objects = [...objects, ...sceneObjects];
+
+        console.log(objects);
+        // object[0]:  Water in bottle
+        // object[1]:  Ocean water
+        // object[2]:  Right barrel
+        // object[3]:  Left barrel
+        // object[4]:  Bands (Hurricane Lantern)
+        // object[5]:  Base (Hurricane Lantern)
+        // object[6]:  Bottle (Ship in a Bottle)
+        // object[7]:  Pin
+        // object[8]:  Cork (Ship in a Bottle)
+        // object[9]:  Glass (Hurricane Lantern)
+        // object[10]: Holder (Ship in a Bottle)
+        // object[11]: Map
+        // object[12]: Ship (Ship in a Bottle)
+        // object[13]: Tabletop
+        // object[14]: Dock
+        // object[15]: Ladder (Right, Closer)
+        // object[16]: Lightpole
+        // object[17]: Life Preserver
+        // object[18]: Life Preserver String
+        // object[19]: Ladder (Right, Further)
+        // object[20]: Ladder (Left, Closer)
+        // object[21]: Ladder (Left, Further)
+        // object[22 - 62]: Dock Supports (1 to 42)
+        let glassMaterial = new THREE.MeshPhysicalMaterial({
+            //color: 0xf42342,
+            metalness: .4,
+            roughness: .0,
+            //envMap: envmap.texture,
+            envMapIntensity: 1.0,
+            clearcoat: 0.9,
+            clearcoatRoughness: 0.1,
+            transparent: true,
+            //transmission: .95,
+            opacity: 0.5,
+            reflectivity: 0.2,
+            refractionRatio: 0.985,
+            ior: 0.9,
+            side: THREE.DoubleSide,
+        });
+        // Assign glass material to glass objects.
+        objects[6].material = glassMaterial;
+        objects[6].renderOrder = 2;
+        objects[9].material = glassMaterial;
+        objects[9].renderOrder = 2;
+        // Place ship into correct position.
+        objects[12].position.set(0.44, 2.023, -2.09);
+
+    });
 
     // Setup WebGL renderer
     const renderer = initRenderer();
     threeDisplay.appendChild( renderer.domElement );
 
-    // Orbit controls
-    /*const controls = new OrbitControls( camera, renderer.domElement );
-    controls.minDistance = 3;
-    controls.maxDistance = 50;*/
+    if (isOrbitCameraOn) {
+        // Orbit controls
+        controls = new OrbitControls( camera, renderer.domElement );
+        controls.minDistance = 1;
+        controls.maxDistance = 50;
+    }
+    else {
+        // Establish camera positioning plans (camera panning)
+        positionDirector = new CameraDirector();
+        positionDirector.addPlan(new CameraPlan(new THREE.Vector3(8, 1, 10), new THREE.Vector3(-4, 1, 10), 8, 0, false));
+        positionDirector.addPlan(new CameraPlan(new THREE.Vector3(8, 0.4, 6), new THREE.Vector3(10, 0.4, 8), 6, 0, true));
+        positionDirector.addPlan(new CameraPlan(new THREE.Vector3(-8, 0.4, -6), new THREE.Vector3(-8, 0.4, -6), 1, 4, false));
+        positionDirector.addPlan(new CameraPlan(new THREE.Vector3(-8, 0.4, -6), new THREE.Vector3(-8, 2, -3), 5, 5, true));
+        positionDirector.addPlan(new CameraPlan(new THREE.Vector3(-9, 8, -18), new THREE.Vector3(-4, 6, 0), 8, 0, false));
 
-    //console.log("objects", objects);
-
+        // Establish camera lookAt plans (camera focal point)
+        // For a smooth pan, take the movement and subtract the 'to' movement with the 'from' movement. Add this number to the 'from' lookAt numbers. 
+        // I.e.: lookAtTo = new THREE.Vector3((posTo.x - posFrom.x) + lookAtFrom.x, (posTo.y - posFrom.y) + lookAtFrom.y, (posTo.z - posFrom.z) + lookAtFrom.z)
+        lookAtDirector = new CameraDirector();
+        lookAtDirector.addPlan(new CameraPlan(new THREE.Vector3(5, 0, 0), new THREE.Vector3(-12, 0, 0), 8, 0, false));
+        lookAtDirector.addPlan(new CameraPlan(new THREE.Vector3(0, 0, 0), new THREE.Vector3(0, 0, 0), 6, 0, true));
+        lookAtDirector.addPlan(new CameraPlan(new THREE.Vector3(-3, 0.2, 0), new THREE.Vector3(-3, 0.2, 0), 1, 4, false));
+        lookAtDirector.addPlan(new CameraPlan(new THREE.Vector3(-3, 0.2, 0), new THREE.Vector3(-5, 0, -1.5), 5, 5, true));
+        lookAtDirector.addPlan(new CameraPlan(new THREE.Vector3(-2, 0, -9), new THREE.Vector3(3, -2, 9), 8, 0, false));
+    }
+    
     animate();
 
     function addCameraWobble(cameraPosition, time) {
@@ -433,11 +459,6 @@ document.addEventListener("DOMContentLoaded", () => {
         requestAnimationFrame(animate);
         time *= 0.001; // Convert time to seconds.
 
-        // Camera wobbles a bit
-        /*camera.position.x = startPosX + (Math.sin(time)/12);
-        camera.position.y = startPosY + (Math.sin(time/2)/14);
-        camera.position.z = startPosZ + (Math.cos(time+2)/16);*/
-
         // if the canvas's css dimensions and renderer resolution differs, resize the renderer to prevent blockiness.
         if (resizeRendererToDisplaySize(renderer)) {
             // Fix distortions when canvas gets resized
@@ -445,37 +466,25 @@ document.addEventListener("DOMContentLoaded", () => {
             camera.aspect = canvas.clientWidth / canvas.clientHeight;
             camera.updateProjectionMatrix();
         }
-        backdrop.material.uniforms.time.value = time;
-        /*scene.traverse( function ( child ) {
-            if ( child.isMesh ) {
-                const shader = child.material.userData.shader;
-                if ( shader ) {
-                    shader.uniforms.time.value = time;
-                }
-            }
-        } );*/
+        //backdrop.material.uniforms.time.value = time;
 
         updateCubes(clouds, balls, time);
-        rockTheBoat(objects[11], time);
+        rockTheBoat(objects[12], time);
         
-        newCameraPosition = positionDirector.update(time);
-        //console.log(newCameraPosition);
-        if (newCameraPosition) {
-            //newCameraPosition = addCameraWobble(newCameraPosition, time);
-            camera.position.x = newCameraPosition.x;
-            camera.position.y = newCameraPosition.y;
-            camera.position.z = newCameraPosition.z;
-        }
+        if (!isOrbitCameraOn) {
+            // Use the CameraPlans if the orbit camera isn't going to be used.
+            newCameraPosition = positionDirector.update(time);
+            if (newCameraPosition) {
+                camera.position.x = newCameraPosition.x;
+                camera.position.y = newCameraPosition.y;
+                camera.position.z = newCameraPosition.z;
+            }
 
-        newCameraLookAt = lookAtDirector.update(time);
-        //console.log(newCameraLookAt);
-        console.log(lookAtDirector.getIndex());
-        if (newCameraLookAt) {
-            /*camera.lookAt.x = newCameraPosition.x;
-            camera.lookAt.y = newCameraPosition.y;
-            camera.lookAt.z = newCameraPosition.z;*/
-            newCameraLookAt = addCameraWobble(newCameraLookAt, time);
-            camera.lookAt(newCameraLookAt.x, newCameraLookAt.y, newCameraLookAt.z);
+            newCameraLookAt = lookAtDirector.update(time);
+            if (newCameraLookAt) {
+                newCameraLookAt = addCameraWobble(newCameraLookAt, time);
+                camera.lookAt(newCameraLookAt.x, newCameraLookAt.y, newCameraLookAt.z);
+            }
         }
 
         renderer.render( scene, camera );
@@ -514,116 +523,6 @@ document.addEventListener("DOMContentLoaded", () => {
         };
 
         return material;
-    }
-
-    function dotWaves() {
-        return new THREE.ShaderMaterial({
-            uniforms: {
-                time: { value: 1.0 },
-            },
-            vertexShader: `
-            varying vec2 vUv; 
-            void main()
-            {
-                vUv = uv;
-            
-                vec4 mvPosition = modelViewMatrix * vec4(position, 1.0 );
-                gl_Position = projectionMatrix * mvPosition;
-            }
-            `,
-            fragmentShader: `
-            #define PI 3.14159265359
-
-            // https://www.shadertoy.com/view/wt23Rt
-            #define saturate2(v) clamp(v,0.,1.)
-
-            uniform float time;
-            varying vec2 vUv;
-
-            vec3 hue2rgb(float hue) {
-                hue=fract(hue);
-                return saturate2(vec3(
-                    abs(hue*6.-3.)-1.,
-                    2.-abs(hue*6.-2.),
-                    2.-abs(hue*6.-4.)
-                ));
-            }
-
-            // Simplex 2D noise
-            // https://gist.github.com/patriciogonzalezvivo/670c22f3966e662d2f83
-            vec3 permute(vec3 x) { return mod(((x*34.0)+1.0)*x, 289.0); }
-
-            float snoise(vec2 v) {
-            const vec4 C = vec4(0.211324865405187, 0.366025403784439,
-                    -0.577350269189626, 0.024390243902439);
-            vec2 i  = floor(v + dot(v, C.yy) );
-            vec2 x0 = v -   i + dot(i, C.xx);
-            vec2 i1;
-            i1 = (x0.x > x0.y) ? vec2(1.0, 0.0) : vec2(0.0, 1.0);
-            vec4 x12 = x0.xyxy + C.xxzz;
-            x12.xy -= i1;
-            i = mod(i, 289.0);
-            vec3 p = permute( permute( i.y + vec3(0.0, i1.y, 1.0 ))
-            + i.x + vec3(0.0, i1.x, 1.0 ));
-            vec3 m = max(0.5 - vec3(dot(x0,x0), dot(x12.xy,x12.xy),
-                dot(x12.zw,x12.zw)), 0.0);
-            m = m*m ;
-            m = m*m ;
-            vec3 x = 2.0 * fract(p * C.www) - 1.0;
-            vec3 h = abs(x) - 0.5;
-            vec3 ox = floor(x + 0.5);
-            vec3 a0 = x - ox;
-            m *= 1.79284291400159 - 0.85373472095314 * ( a0*a0 + h*h );
-            vec3 g;
-            g.x  = a0.x  * x0.x  + h.x  * x0.y;
-            g.yz = a0.yz * x12.xz + h.yz * x12.yw;
-            return 130.0 * dot(m, g);
-            }
-
-            // Draw a circle
-            float circle(vec2 st, vec2 center, float size, float blur) {
-                float dist = distance(st, center);
-                return smoothstep(dist, dist+blur, size);
-            }
-
-            float doubleEase(float x) {
-                return 0.5 - (cos(x*2.0*PI)/2.0);
-            }
-
-            void main()
-            {
-                // Normalized pixel coordinates (from -0.5 to 0.5)
-                vec2 uv = -1.0 + 2.0 * vUv;
-
-                int gridCount = 25; // This will be how many circles fit within the grid. How many balls fitting within the viewport width depends on the aspect ratio.
-                
-                float color = 0.0;
-                vec2 circleCenter = vec2(0.5, 0.5);
-                float size = 0.1;
-                float blur = 0.01;
-                
-                float adjustedX = uv.x + 0.5;
-                float adjustedY = uv.y + 0.5;
-                float noiseValue = snoise(vec2(adjustedX + cos(time/3.), adjustedY + time/6.))/2.0;
-                float posX = mod(adjustedX*5.0 * float(gridCount), 1.0);
-                float posY = mod(adjustedY * float(gridCount), 1.0);
-                color = circle(vec2(posX, posY), circleCenter, size+noiseValue, blur);
-                
-                //vec3 colorA = vec3(1.0, 0.8, 0.2);
-                //vec3 colorB = vec3(0.4, 0.75, 1.0);
-                vec3 fg = mix(hue2rgb(time/16.0)*cos(uv.x), hue2rgb(time/20.0)*sin(uv.y), noiseValue);
-                //vec3 fg = vec3(uv.x, uv.y, sin(time));
-                //vec3 fg = vec3(0.0, 0.5, 1.0); // sky blue
-                //vec3 bg = vec3(1.0, 1.0, 1.0); // transparent
-
-                //float bgDist = distance(vec2(-0.1, -0.1), vec2(uv.x, uv.y));
-                //vec3 bg = vec3(smoothstep(bgDist, bgDist+0.8, 1.0));
-                vec3 bg = vec3(clamp(doubleEase(vUv.y), 0.3, 1.0));
-                gl_FragColor = vec4(mix(bg,fg,color), 1.0);
-            }
-            `,
-            side: THREE.BackSide
-        });
     }
 
     function holderTexture(lightMap, lightMapIntensity) {
@@ -843,6 +742,30 @@ document.addEventListener("DOMContentLoaded", () => {
 
         return renderer;
     }
+    
+    // On success: Return an array of all the mesh's in the scene.
+    // On fail: Return an error message.
+    function loadScene(url) {
+        let newObjects = [];
+        return new Promise((resolve, reject) => {
+            new GLTFLoader().load( "./scene2.glb", 
+            function (object) {
+                // On Load
+                object.scene.children.forEach((prop, i) => newObjects[i] = prop); // Add all props from the scene into the objects array.
+                scene.add(object.scene);
+                resolve(newObjects);
+            },
+            function (XMLHttpRequest) {
+                // On Progress
+                console.log("Loading Scene... ", XMLHttpRequest);
+            },
+            function (err) {
+                // On Error
+                console.log(err);
+                reject(err);
+            });
+        });
+    }
 
     // Fix blockiness by ensuring the size of the canvas's resolution matches with the canvas's css dimensions.
     function resizeRendererToDisplaySize(renderer) {
@@ -859,9 +782,9 @@ document.addEventListener("DOMContentLoaded", () => {
 
     function rockTheBoat(ship, time) {
         if (ship) {
-            ship.rotation.x = Math.sin(time) * 0.15;
-            ship.rotation.y = (Math.cos(time) * 0.05) + THREE.Math.degToRad(270);
-            ship.position.y = (Math.cos(time) * 0.02) - 0.35;
+            ship.rotation.x = Math.sin(time) * 0.06;
+            ship.rotation.y = (Math.cos(time) * 0.04);
+            ship.position.y = (Math.cos(time) * 0.0025) + 2.083;
         }
     }
 
@@ -978,7 +901,7 @@ class CameraPlan {
 class CameraDirector {
     // constructor takes an array of CameraPlans.
     constructor (plans = null) {
-        this.plans = plans;
+        this.plans = plans ? plans : []; // If plans is null, make an empty array.
         this.index = 0;
     }
 

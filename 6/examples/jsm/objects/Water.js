@@ -14,7 +14,7 @@ import {
 } from '../../../three.module.js';
 import { Reflector } from './Reflector.js';
 import { Refractor } from './Refractor.js';
-import { DoubleSide } from '../../../src/constants.js';
+//import { DoubleSide } from '../../../src/constants.js';
 
 /**
  * References:
@@ -23,13 +23,13 @@ import { DoubleSide } from '../../../src/constants.js';
  *
  */
 
-class Water2 extends Mesh {
+class Water extends Mesh {
 
 	constructor( geometry, options = {} ) {
 
 		super( geometry );
 
-		this.type = 'Water2';
+		this.type = 'Water';
 
 		const scope = this;
 
@@ -41,14 +41,8 @@ class Water2 extends Mesh {
 		const flowSpeed = options.flowSpeed || 0.03;
 		const reflectivity = options.reflectivity || 0.02;
 		const scale = options.scale || 1;
-		const shader = options.shader || Water2.WaterShader;
+		const shader = options.shader || Water.WaterShader;
 		const encoding = options.encoding !== undefined ? options.encoding : LinearEncoding;
-
-		/*const roundOffCenter = options.roundOffCenter || new Vector2(0, 0);
-		const roundOffRadiusX = options.roundOffRadiusX || 1;
-		const roundOffRadiusZ = options.roundOffRadiusZ || 1;
-		const roundOffBoundingBox = options.roundOffBoundingBox || null;*/
-		const roundness = options.roundness || 0.5;
 
 		const textureLoader = new TextureLoader();
 
@@ -65,14 +59,14 @@ class Water2 extends Mesh {
 
 		if ( Reflector === undefined ) {
 
-			console.error( 'THREE.Water2: Required component Reflector not found.' );
+			console.error( 'THREE.Water: Required component Reflector not found.' );
 			return;
 
 		}
 
 		if ( Refractor === undefined ) {
 
-			console.error( 'THREE.Water2: Required component Refractor not found.' );
+			console.error( 'THREE.Water: Required component Refractor not found.' );
 			return;
 
 		}
@@ -105,7 +99,7 @@ class Water2 extends Mesh {
 			fragmentShader: shader.fragmentShader,
 			transparent: true,
 			fog: true,
-			side: DoubleSide
+			//side: DoubleSide
 		} );
 
 		if ( flowMap !== undefined ) {
@@ -141,13 +135,6 @@ class Water2 extends Mesh {
 		this.material.uniforms[ 'color' ].value = color;
 		this.material.uniforms[ 'reflectivity' ].value = reflectivity;
 		this.material.uniforms[ 'textureMatrix' ].value = textureMatrix;
-
-		// Clipping
-		/*this.material.uniforms[ 'roundOffCenter' ].value = roundOffCenter
-		this.material.uniforms[ 'roundOffRadiusX' ].value = roundOffRadiusX;
-		this.material.uniforms[ 'roundOffRadiusZ' ].value = roundOffRadiusZ;
-		this.material.uniforms[ 'roundOffBoundingBox' ].value = roundOffBoundingBox;*/
-		this.material.uniforms[ 'roundness' ].value = roundness;
 
 		// inital values
 
@@ -224,9 +211,9 @@ class Water2 extends Mesh {
 
 }
 
-Water2.prototype.isWater = true;
+Water.prototype.isWater = true;
 
-Water2.WaterShader = {
+Water.WaterShader = {
 
 	uniforms: {
 
@@ -276,7 +263,7 @@ Water2.WaterShader = {
 		},
 
 		// For clipping the plane
-		/*'roundOffCenter': {
+		'roundOffCenter': {
 			type: 'v2',
 			value: new Vector2()
 		},
@@ -294,10 +281,6 @@ Water2.WaterShader = {
 		'roundOffBoundingBox': {
 			type: 'v2',
 			value: new Vector2()
-		}*/
-		'roundness': {
-			type: 'f',
-			value: 0.5
 		}
 		
 	},
@@ -384,7 +367,7 @@ Water2.WaterShader = {
 			vCoord = textureMatrix * vec4( position , 1.0 );
 
 			worldPosition = modelMatrix * vec4( position, 1.0 );
-			worldPosition.y += snoise(position.xy + (time/2.0)) / 150.0;
+			worldPosition.y += snoise(position.xy + (time/2.0)) / 12.0;
 			vToEye = cameraPosition - worldPosition.xyz;
 
 			vec4 mvPosition =  viewMatrix * worldPosition; // used in fog_vertex
@@ -397,122 +380,86 @@ Water2.WaterShader = {
 
 	fragmentShader: /* glsl */`
 
-		#include <common>
-		#include <fog_pars_fragment>
-		#include <logdepthbuf_pars_fragment>
+	#include <common>
+	#include <fog_pars_fragment>
+	#include <logdepthbuf_pars_fragment>
 
-		uniform sampler2D tReflectionMap;
-		uniform sampler2D tRefractionMap;
-		uniform sampler2D tNormalMap0;
-		uniform sampler2D tNormalMap1;
+	uniform sampler2D tReflectionMap;
+	uniform sampler2D tRefractionMap;
+	uniform sampler2D tNormalMap0;
+	uniform sampler2D tNormalMap1;
 
+	#ifdef USE_FLOWMAP
+		uniform sampler2D tFlowMap;
+	#else
+		uniform vec2 flowDirection;
+	#endif
+
+	uniform vec3 color;
+	uniform float reflectivity;
+	uniform vec4 config;
+
+	uniform vec2 roundOffCenter;
+	uniform float roundOffRadiusX;
+	uniform float roundOffRadiusZ;
+	uniform vec2 roundOffBoundingBox;
+
+	varying vec4 vCoord;
+	varying vec2 vUv;
+	varying vec3 vToEye;
+	varying vec4 worldPosition;
+
+	void main() {
+
+		#include <logdepthbuf_fragment>
+
+		float flowMapOffset0 = config.x;
+		float flowMapOffset1 = config.y;
+		float halfCycle = config.z;
+		float scale = config.w;
+
+		vec3 toEye = normalize( vToEye );
+
+		// determine flow direction
+		vec2 flow;
 		#ifdef USE_FLOWMAP
-			uniform sampler2D tFlowMap;
+			flow = texture2D( tFlowMap, vUv ).rg * 2.0 - 1.0;
 		#else
-			uniform vec2 flowDirection;
+			flow = flowDirection;
 		#endif
+		flow.x *= - 1.0;
 
-		uniform vec3 color;
-		uniform float reflectivity;
-		uniform vec4 config;
+		// sample normal maps (distort uvs with flowdata)
+		vec4 normalColor0 = texture2D( tNormalMap0, ( vUv * scale ) + flow * flowMapOffset0 );
+		vec4 normalColor1 = texture2D( tNormalMap1, ( vUv * scale ) + flow * flowMapOffset1 );
 
-		//uniform vec2 roundOffCenter;
-		//uniform float roundOffRadiusX;
-		//uniform float roundOffRadiusZ;
-		//uniform vec2 roundOffBoundingBox;*
-		uniform float roundness;
+		// linear interpolate to get the final normal color
+		float flowLerp = abs( halfCycle - flowMapOffset0 ) / halfCycle;
+		vec4 normalColor = mix( normalColor0, normalColor1, flowLerp );
 
-		varying vec4 vCoord;
-		varying vec2 vUv;
-		varying vec3 vToEye;
-		varying vec4 worldPosition;
+		// calculate normal vector
+		vec3 normal = normalize( vec3( normalColor.r * 2.0 - 1.0, normalColor.b,  normalColor.g * 2.0 - 1.0 ) );
 
-		void main() {
+		// calculate the fresnel term to blend reflection and refraction maps
+		float theta = max( dot( toEye, normal ), 0.0 );
+		float reflectance = reflectivity + ( 1.0 - reflectivity ) * pow( ( 1.0 - theta ), 5.0 );
 
-			#include <logdepthbuf_fragment>
+		// calculate final uv coords
+		vec3 coord = vCoord.xyz / vCoord.w;
+		vec2 uv = coord.xy + coord.z * normal.xz * 0.05;
 
-			float flowMapOffset0 = config.x;
-			float flowMapOffset1 = config.y;
-			float halfCycle = config.z;
-			float scale = config.w;
+		vec4 reflectColor = texture2D( tReflectionMap, vec2( 1.0 - uv.x, uv.y ) );
+		vec4 refractColor = texture2D( tRefractionMap, uv );
 
-			vec3 toEye = normalize( vToEye );
+		// multiply water color with the mix of both textures
+		gl_FragColor = vec4( color, 1.0 ) * mix( refractColor, reflectColor, reflectance );
 
-			float roundOffCenterX = 0.5;
-			float roundOffRadiusX = roundness*2.0;
-			float roundOffCenterY = roundness;
-			float roundOffRadiusY = roundness;
-
-			// Round off the corners near the front of the bottle
-			vec2 positionRelativeToCenterPoint = vec2(roundOffRadiusX*(roundOffCenterX - vUv.x), roundOffCenterY - vUv.y);
-			// Find theta.
-			float theta = 0.0;
-			if (positionRelativeToCenterPoint.x == 0.0 && positionRelativeToCenterPoint.y == 0.0) {
-				theta = 0.0;
-			}
-			else if (positionRelativeToCenterPoint.x == 0.0) {
-				// Account for edge cases where x is 0
-				if (positionRelativeToCenterPoint.y > 0.0) {
-					theta = PI/2.0;
-				}
-				else {
-					theta = 3.0*PI/2.0;
-				}
-			}
-			else {
-				theta = atan(positionRelativeToCenterPoint.y, positionRelativeToCenterPoint.x);
-			}
-			// Find point on the curve using theta
-			vec2 curvePoint = vec2(roundOffRadiusX*cos(theta), roundOffRadiusY*sin(theta));
-			// Check if the original point is beyond this point on the curve.
-			bool isBeyond = abs(positionRelativeToCenterPoint.y) > abs(curvePoint.y);
-			// Make sure that only the positive y hemisphere is checked
-			bool yIsNegative = positionRelativeToCenterPoint.y < 0.0;
-			// If the point is beyond the curve point, remove it.
-			if (!yIsNegative && isBeyond) {
-				discard;
-			}
-
-			// determine flow direction
-			vec2 flow;
-			#ifdef USE_FLOWMAP
-				flow = texture2D( tFlowMap, vUv ).rg * 2.0 - 1.0;
-			#else
-				flow = flowDirection;
-			#endif
-			flow.x *= - 1.0;
-
-			// sample normal maps (distort uvs with flowdata)
-			vec4 normalColor0 = texture2D( tNormalMap0, ( vUv * scale ) + flow * flowMapOffset0 );
-			vec4 normalColor1 = texture2D( tNormalMap1, ( vUv * scale ) + flow * flowMapOffset1 );
-
-			// linear interpolate to get the final normal color
-			float flowLerp = abs( halfCycle - flowMapOffset0 ) / halfCycle;
-			vec4 normalColor = mix( normalColor0, normalColor1, flowLerp );
-
-			// calculate normal vector
-			vec3 normal = normalize( vec3( normalColor.r * 2.0 - 1.0, normalColor.b,  normalColor.g * 2.0 - 1.0 ) );
-
-			// calculate the fresnel term to blend reflection and refraction maps
-			theta = max( dot( toEye, normal ), 0.0 );
-			float reflectance = reflectivity + ( 1.0 - reflectivity ) * pow( ( 1.0 - theta ), 5.0 );
-
-			// calculate final uv coords
-			vec3 coord = vCoord.xyz / vCoord.w;
-			vec2 uv = coord.xy + coord.z * normal.xz * 0.05;
-
-			vec4 reflectColor = texture2D( tReflectionMap, vec2( 1.0 - uv.x, uv.y ) );
-			vec4 refractColor = texture2D( tRefractionMap, uv );
-
-			// multiply water color with the mix of both textures
-			gl_FragColor = vec4( color, 1.0 ) * mix( refractColor, reflectColor, reflectance );
-
-			#include <tonemapping_fragment>
-			#include <encodings_fragment>
-			#include <fog_fragment>
+		#include <tonemapping_fragment>
+		#include <encodings_fragment>
+		#include <fog_fragment>
 
 		}`
 
 };
 
-export { Water2 };
+export { Water };
