@@ -2,16 +2,26 @@ import * as THREE from "./three.module.js";
 import { OrbitControls } from './examples/jsm/controls/OrbitControls.js';
 import { Water } from './examples/jsm/objects/Water.js';
 import { Water2 } from './examples/jsm/objects/Water2.js';
+import { Water3 } from './examples/jsm/objects/Water3.js';
 import { GLTFLoader } from './examples/jsm/loaders/GLTFLoader.js';
 import { MarchingCubes } from './examples/jsm/objects/MarchingCubes.js';
+import { Sky } from './examples/jsm/objects/Sky.js';
 
 document.addEventListener("DOMContentLoaded", () => {
     const threeDisplay = document.getElementById("threeDisplay");
 
     // Globals
     const balls = [];
-    const lightMapIntensity = 1.25;
+    const lightMapIntensity = 1;
     const isOrbitCameraOn = true;
+    const skySettings = {
+        turbidity: 10,
+        rayleigh: 3,
+        mieCoefficient: 0.005,
+        mieDirectionalG: 0.7,
+        elevation: 0,
+        azimuth: 180
+    }
     let screenDimensions = {
         width: window.innerWidth || document.documentElement.clientWidth || document.body.clientWidth,
         height: window.innerHeight || document.documentElement.clientHeight || document.body.clientHeight
@@ -32,10 +42,10 @@ document.addEventListener("DOMContentLoaded", () => {
     const fov = 30;
     let aspect = screenDimensions.width / screenDimensions.height;  // the canvas default
     const near = 0.1;
-    const far = 100;
+    const far = 10000;
     const camera = new THREE.PerspectiveCamera(fov, aspect, near, far);
-    camera.position.set(0, 2, 3);
-    camera.lookAt(0, 0, 0);
+    camera.position.set(0, 2.2, 1.25);
+    camera.lookAt(0, 2.5, -1000);
 
     // On resize, adjust the camera 
     window.addEventListener("resize", (e) => {
@@ -49,24 +59,27 @@ document.addEventListener("DOMContentLoaded", () => {
         renderer.domElement.style.height = screenDimensions.height + "px";
     });
 
-    // Skybox
-    const cubeTextureLoader = new THREE.CubeTextureLoader();
-    cubeTextureLoader.setPath( './textures/cube/apartment/' );
-    const cubeTexture = cubeTextureLoader.load( [
-        "px.jpg", "nx.jpg",
-        "py.jpg", "ny.jpg",
-        "pz.jpg", "nz.jpg"
-    ] );
-    scene.environment = cubeTexture;
+    // Sky
+    let sky = new Sky();
+    sky.scale.setScalar( 100000 );
+    scene.add( sky );
+    updateSky(skySettings);
 
     // Lighting
-    let hemisphereLight = new THREE.HemisphereLight( 0xfff3c6, 0x414d63, 1 );
-    scene.add(hemisphereLight);
+    {
+        const color = 0xFFFFFF;
+        const intensity = 1;
+        const sunlight = new THREE.DirectionalLight(color, intensity);
+        sunlight.position.set(0, 4, -10);
+        sunlight.target.position.set(0, 0, 0);
+        scene.add(sunlight);
+
+        const ambientLight = new THREE.AmbientLight(0xffffff, 0.03);
+        scene.add(ambientLight);
+    }
 
     {
         // Water in the bottle
-        //const width = 4.8;
-        //const height = 1.9;
         const width = 1.9;
         const height = 4.4;
         const segments = 48;   
@@ -86,28 +99,27 @@ document.addEventListener("DOMContentLoaded", () => {
         bottleWater.scale.set(0.1, 0.1, 0.1);
         bottleWater.renderOrder = 1; // allows the water to be visible through the bottle
         objects.push(bottleWater);
-        scene.add(bottleWater);
+        //scene.add(bottleWater);
     }
-    
+
     {
-        // Ocean
-        const width = 100;
-        const height = 100;  
-        const segments = 200;   
+        // Ocean far
+        const width = 10000;
+        const height = 10000;  
+        const segments = 1;   
         const geometry = new THREE.PlaneGeometry(width, height, segments, segments);
-        let ocean = new Water( geometry, {
-            color: '#77a6ff',
-            scale: 25,
+        let ocean = new Water3( geometry, {
+            color: '#6d808c',
+            scale: 1000,
             reflectivity: 0.1,
             flowDirection: new THREE.Vector2( -1, 1 ),
-            textureWidth: 512,
-            textureHeight: 512,
+            textureWidth: 2048,
+            textureHeight: 2048,
         } );
         ocean.rotation.x = THREE.Math.degToRad(270);
-        ocean.position.set(0, 0, -50);
+        ocean.position.set(0, -0.15, -50);
         ocean.renderOrder = 1; // allows the water to be visible through the bottle
         objects.push(ocean);
-        scene.add(ocean);
     }
 
     // Add the table top
@@ -318,49 +330,9 @@ document.addEventListener("DOMContentLoaded", () => {
         bands.position.z = -3;
         objects.push(bands);
         scene.add(bands);
-    });
-
-    // Load the ship model
-    let shipDiffuse = new THREE.TextureLoader().load("ship_diffuse.png");
-    shipDiffuse.flipY = false;
-    let shipLightmap = new THREE.TextureLoader().load("ship_lightmap.jpg");
-    shipLightmap.flipY = false;
-    new GLTFLoader().load( "./ship.glb", function (object) {
-        let ship = object.scene;
-
-        let shipGeometry = ship.children[0].geometry;
-        let shipUVArr = shipGeometry.getAttribute("uv").array;
-        shipGeometry.setAttribute('uv2', new THREE.BufferAttribute( shipUVArr, 2 ));
-
-        ship.material = new THREE.MeshLambertMaterial({
-            map: shipDiffuse,
-            lightMap: shipLightmap,
-            lightMapIntensity: lightMapIntensity,
-        });
-        let bakedShip = new THREE.Mesh(shipGeometry, ship.material);
-        bakedShip.scale.x = 0.06;
-        bakedShip.scale.y = 0.06;
-        bakedShip.scale.z = 0.06;
-        bakedShip.position.y = -0.35;
-        bakedShip.rotation.y = THREE.Math.degToRad(270);
-        objects.push(bakedShip);
-        scene.add(bakedShip);
-    });
-
-    // Setup dot wave backdrop
-    let backdropGeometry = new THREE.CylinderGeometry(30, 30, 40, 30, 1, true);
-    let backdropMaterial = dotWaves();
-    let backdrop = new THREE.Mesh(backdropGeometry, backdropMaterial);
-    backdrop.position.y = 4;
-    backdrop.rotation.y = THREE.Math.degToRad(180);
-    objects.push(backdrop);
-    scene.add(backdrop);*/
-
-    /*new GLTFLoader().load( "./scene2.glb", function (object) {
-        object.scene.children.forEach(prop => objects.push(prop)); // Add all props from the scene into the objects array.
-        scene.add(object.scene);
     });*/
-    loadScene("./scene2.glb")
+
+    loadScene("./scene4.glb")
     .then((sceneObjects) => {
         // Merge both object arrays into one using the spread operator.
         objects = [...objects, ...sceneObjects];
@@ -388,31 +360,141 @@ document.addEventListener("DOMContentLoaded", () => {
         // object[19]: Ladder (Right, Further)
         // object[20]: Ladder (Left, Closer)
         // object[21]: Ladder (Left, Further)
-        // object[22 - 62]: Dock Supports (1 to 42)
-        let glassMaterial = new THREE.MeshPhysicalMaterial({
-            //color: 0xf42342,
-            metalness: .4,
-            roughness: .0,
-            //envMap: envmap.texture,
-            envMapIntensity: 1.0,
-            clearcoat: 0.9,
-            clearcoatRoughness: 0.1,
-            transparent: true,
-            //transmission: .95,
-            opacity: 0.5,
-            reflectivity: 0.2,
-            refractionRatio: 0.985,
-            ior: 0.9,
-            side: THREE.DoubleSide,
-        });
-        // Assign glass material to glass objects.
-        objects[6].material = glassMaterial;
-        objects[6].renderOrder = 2;
-        objects[9].material = glassMaterial;
-        objects[9].renderOrder = 2;
-        // Place ship into correct position.
-        objects[12].position.set(0.44, 2.023, -2.09);
+        // object[22 - 63]: Dock Supports (1 to 42)
 
+        // Barrels
+        let barrelDiffuse = new THREE.TextureLoader().load("barrel_diffuse.png");
+        barrelDiffuse.flipY = false;
+        let barrelMaterial = new THREE.MeshLambertMaterial({
+            map: barrelDiffuse
+        });
+        objects[2].material = barrelMaterial;
+        objects[3].material = barrelMaterial;
+
+        // Hurricane Lantern
+        // Bands
+        objects[4].material = new THREE.MeshPhongMaterial({
+            color: 0xffd700,
+            shininess: 1
+        });
+        // Base
+        objects[5].material = new THREE.MeshPhongMaterial({
+            color: 0x1258f0,
+            specular: 0x43431e,
+            shininess: 1
+        });
+        
+        // Bottle
+        // Create cube render target. This holds the environment map texture that the CubeCamera generates.
+        const bottleRenderTarget = new THREE.WebGLCubeRenderTarget( 128, { 
+            format: THREE.RGBFormat 
+        });
+        // Create cube camera
+        const bottleCubeCamera = new THREE.CubeCamera( 0.05, 100000, bottleRenderTarget );
+        bottleCubeCamera.position.set(0.44, 2.023, -2.09);
+        scene.add( bottleCubeCamera );
+        objects[6].material = new THREE.MeshPhongMaterial({ 
+            color: 0xffffff, 
+            envMap: bottleRenderTarget.texture,
+            refractionRatio: 0.985, 
+		    reflectivity: 0.9,
+            opacity: 0.4,
+            shininess: 1,
+            specular: 0xffffff,
+            transparent: true
+        });
+        objects[6].renderOrder = 2;
+
+        // Pin
+        let pinDiffuse = new THREE.TextureLoader().load("pin_diffuse.png");
+        pinDiffuse.flipY = false;
+        objects[7].material = new THREE.MeshLambertMaterial({
+            map: pinDiffuse,
+            side: THREE.FrontSide
+        });
+
+        // Hurricane Lantern glass
+        // Create cube render target. This holds the environment map texture that the CubeCamera generates.
+        const lampRenderTarget = new THREE.WebGLCubeRenderTarget( 128, { 
+            format: THREE.RGBFormat 
+        });
+        // Create cube camera
+        const lampCubeCamera = new THREE.CubeCamera( 0.05, 100000, lampRenderTarget );
+        lampCubeCamera.position.set(-1.26, 2.1, -1.77);
+        scene.add( lampCubeCamera );
+        objects[9].material = new THREE.MeshPhongMaterial({ 
+            color: 0xffffff, 
+            envMap: lampRenderTarget.texture,
+            refractionRatio: 0.985, 
+		    reflectivity: 0.9,
+            opacity: 0.4,
+            shininess: 1,
+            specular: 0xffffff,
+            transparent: true
+        });
+        objects[9].renderOrder = 2;
+
+        // Map
+        let mapDiffuse = new THREE.TextureLoader().load("map_diffuse.jpg");
+        mapDiffuse.flipY = false;
+        objects[11].material = new THREE.MeshLambertMaterial({
+            map: mapDiffuse,
+            side: THREE.DoubleSide
+        })
+
+        // Ship (Ship in a Bottle)
+        objects[12].position.set(0.44, 2.083, -2.09); // Place ship into correct position.
+        let shipDiffuse = new THREE.TextureLoader().load("ship_diffuse.png");
+        shipDiffuse.flipY = false;
+        let shipLightmap = new THREE.TextureLoader().load("ship_lightmap.jpg");
+        shipLightmap.flipY = false;
+        generateUV2(objects[12].geometry);
+        objects[12].material = new THREE.MeshLambertMaterial({
+            map: shipDiffuse,
+            lightMap: shipLightmap,
+            lightMapIntensity: lightMapIntensity,
+        });
+
+        // Dock
+        let dockDiffuse = new THREE.TextureLoader().load("wood_texture.jpg");
+        dockDiffuse.flipY = false;
+        dockDiffuse.wrapS = THREE.RepeatWrapping;
+        dockDiffuse.wrapT = THREE.RepeatWrapping;
+        dockDiffuse.repeat.set( 8, 8 );
+        dockDiffuse.anisotropy = renderer.getMaxAnisotropy();
+        objects[14].material = new THREE.MeshLambertMaterial({
+            map: dockDiffuse
+        })
+
+        // Life preserver
+        let lifePreserverDiffuse = new THREE.TextureLoader().load("life_preserver_diffuse.png");
+        lifePreserverDiffuse.flipY = false;
+        objects[17].material = new THREE.MeshLambertMaterial({
+            map: lifePreserverDiffuse
+        })
+
+        // Dock Supports
+        let dockSupportDiffuse = new THREE.TextureLoader().load("dock_support_diffuse_2.png");
+        dockSupportDiffuse.flipY = false;
+        for (let i = 22; i <= 63; i++) {
+            objects[i].material = new THREE.MeshLambertMaterial({
+                map: dockSupportDiffuse
+            })
+        }
+
+        // Add all objects to the scene.
+        objects.forEach(object => scene.add(object));
+
+        // Generate environment maps from each cube camera.
+        objects[6].visible = false; // Hide the bottle
+        bottleCubeCamera.update( renderer, scene );
+        objects[6].visible = true;
+
+        objects[9].visible = false; // Hide the lamp glass
+        objects[4].visible = false; // Hide the bands
+        lampCubeCamera.update( renderer, scene );
+        objects[9].visible = true;
+        objects[4].visible = true;
     });
 
     // Setup WebGL renderer
@@ -523,6 +605,11 @@ document.addEventListener("DOMContentLoaded", () => {
         };
 
         return material;
+    }
+
+    function generateUV2(geometry) {
+        let UVArr = geometry.getAttribute("uv").array;
+        geometry.setAttribute('uv2', new THREE.BufferAttribute( UVArr, 2 ));
     }
 
     function holderTexture(lightMap, lightMapIntensity) {
@@ -748,11 +835,12 @@ document.addEventListener("DOMContentLoaded", () => {
     function loadScene(url) {
         let newObjects = [];
         return new Promise((resolve, reject) => {
-            new GLTFLoader().load( "./scene2.glb", 
+            new GLTFLoader().load( url, 
             function (object) {
                 // On Load
+                console.log(object);
                 object.scene.children.forEach((prop, i) => newObjects[i] = prop); // Add all props from the scene into the objects array.
-                scene.add(object.scene);
+                //scene.add(object.scene);
                 resolve(newObjects);
             },
             function (XMLHttpRequest) {
@@ -766,6 +854,10 @@ document.addEventListener("DOMContentLoaded", () => {
             });
         });
     }
+
+    /*function addAllObjectsToScene(objects) {
+        objects.forEach(object => scene.add(object));
+    }*/
 
     // Fix blockiness by ensuring the size of the canvas's resolution matches with the canvas's css dimensions.
     function resizeRendererToDisplaySize(renderer) {
@@ -807,6 +899,21 @@ document.addEventListener("DOMContentLoaded", () => {
 
         }
 
+    }
+
+    function updateSky(settings) {
+        const uniforms = sky.material.uniforms;
+        uniforms[ 'turbidity' ].value = settings.turbidity;
+        uniforms[ 'rayleigh' ].value = settings.rayleigh;
+        uniforms[ 'mieCoefficient' ].value = settings.mieCoefficient;
+        uniforms[ 'mieDirectionalG' ].value = settings.mieDirectionalG;
+
+        const phi = THREE.MathUtils.degToRad( 90 - settings.elevation );
+        const theta = THREE.MathUtils.degToRad( settings.azimuth );
+
+        let sun = new THREE.Vector3();
+        sun.setFromSphericalCoords( 1, phi, theta );
+        sky.material.uniforms[ 'sunPosition' ].value.copy( sun );
     }
 });
 
