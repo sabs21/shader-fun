@@ -39,7 +39,7 @@ document.addEventListener("DOMContentLoaded", () => {
     const scene = new THREE.Scene();
 
     // Set the camera up
-    const fov = 30;
+    const fov = 40;
     let aspect = screenDimensions.width / screenDimensions.height;  // the canvas default
     const near = 0.1;
     const far = 10000;
@@ -362,29 +362,7 @@ document.addEventListener("DOMContentLoaded", () => {
         // object[21]: Ladder (Left, Further)
         // object[22 - 63]: Dock Supports (1 to 42)
 
-        // Barrels
-        let barrelDiffuse = new THREE.TextureLoader().load("barrel_diffuse.png");
-        barrelDiffuse.flipY = false;
-        let barrelMaterial = new THREE.MeshLambertMaterial({
-            map: barrelDiffuse
-        });
-        objects[2].material = barrelMaterial;
-        objects[3].material = barrelMaterial;
-
-        // Hurricane Lantern
-        // Bands
-        objects[4].material = new THREE.MeshPhongMaterial({
-            color: 0xffd700,
-            shininess: 1
-        });
-        // Base
-        objects[5].material = new THREE.MeshPhongMaterial({
-            color: 0x1258f0,
-            specular: 0x43431e,
-            shininess: 1
-        });
-        
-        // Bottle
+        // Bottle Cube Camera
         // Create cube render target. This holds the environment map texture that the CubeCamera generates.
         const bottleRenderTarget = new THREE.WebGLCubeRenderTarget( 128, { 
             format: THREE.RGBFormat 
@@ -393,13 +371,52 @@ document.addEventListener("DOMContentLoaded", () => {
         const bottleCubeCamera = new THREE.CubeCamera( 0.05, 100000, bottleRenderTarget );
         bottleCubeCamera.position.set(0.44, 2.023, -2.09);
         scene.add( bottleCubeCamera );
+
+        // Lantern Glass Cube Camera
+        // Create cube render target. This holds the environment map texture that the CubeCamera generates.
+        const lanternRenderTarget = new THREE.WebGLCubeRenderTarget( 128, { 
+            format: THREE.RGBFormat 
+        });
+        // Create cube camera
+        const lanternCubeCamera = new THREE.CubeCamera( 0.05, 100000, lanternRenderTarget );
+        lanternCubeCamera.position.set(-1.26, 2.1, -1.77);
+        scene.add( lanternCubeCamera );
+
+        // Barrels
+        let barrelDiffuse = new THREE.TextureLoader().load("barrel_diffuse.jpg");
+        barrelDiffuse.flipY = false;
+        let barrelSpecular = new THREE.TextureLoader().load("barrel_specular.png");
+        barrelSpecular.flipY = false;
+        let barrelMaterial = new THREE.MeshPhongMaterial({
+            map: barrelDiffuse,
+            specularMap: barrelSpecular,
+            shininess: 100,
+            reflectivity: 0.2, 
+        });
+        objects[2].material = barrelMaterial;
+        objects[3].material = barrelMaterial;
+
+        // Hurricane Lantern
+        // Bands
+        objects[4].material = new THREE.MeshPhongMaterial({
+            color: 0xffd700,
+            shininess: 100
+        });
+        // Base
+        objects[5].material = new THREE.MeshPhongMaterial({
+            color: 0x1258f0,
+            specular: 0x43431e,
+            shininess: 100
+        });
+        
+        // Bottle
         objects[6].material = new THREE.MeshPhongMaterial({ 
             color: 0xffffff, 
             envMap: bottleRenderTarget.texture,
             refractionRatio: 0.985, 
 		    reflectivity: 0.9,
             opacity: 0.4,
-            shininess: 1,
+            shininess: 100,
             specular: 0xffffff,
             transparent: true
         });
@@ -414,25 +431,24 @@ document.addEventListener("DOMContentLoaded", () => {
         });
 
         // Hurricane Lantern glass
-        // Create cube render target. This holds the environment map texture that the CubeCamera generates.
-        const lampRenderTarget = new THREE.WebGLCubeRenderTarget( 128, { 
-            format: THREE.RGBFormat 
-        });
-        // Create cube camera
-        const lampCubeCamera = new THREE.CubeCamera( 0.05, 100000, lampRenderTarget );
-        lampCubeCamera.position.set(-1.26, 2.1, -1.77);
-        scene.add( lampCubeCamera );
         objects[9].material = new THREE.MeshPhongMaterial({ 
             color: 0xffffff, 
-            envMap: lampRenderTarget.texture,
+            envMap: lanternRenderTarget.texture,
             refractionRatio: 0.985, 
 		    reflectivity: 0.9,
             opacity: 0.4,
-            shininess: 1,
+            shininess: 100,
             specular: 0xffffff,
             transparent: true
         });
         objects[9].renderOrder = 2;
+
+        // Holder
+        let holderDiffuse = new THREE.TextureLoader().load("wood_texture_2.jpg");
+        holderDiffuse.flipY = false;
+        objects[10].material = new THREE.MeshLambertMaterial({
+            map: holderDiffuse
+        });
 
         // Map
         let mapDiffuse = new THREE.TextureLoader().load("map_diffuse.jpg");
@@ -440,7 +456,7 @@ document.addEventListener("DOMContentLoaded", () => {
         objects[11].material = new THREE.MeshLambertMaterial({
             map: mapDiffuse,
             side: THREE.DoubleSide
-        })
+        });
 
         // Ship (Ship in a Bottle)
         objects[12].position.set(0.44, 2.083, -2.09); // Place ship into correct position.
@@ -455,15 +471,35 @@ document.addEventListener("DOMContentLoaded", () => {
             lightMapIntensity: lightMapIntensity,
         });
 
+        // Table top
+        let tableDiffuse = new THREE.TextureLoader().load("wood_texture_2.jpg"); // TODO: Should reuse holderDiffuse, but cloning is not working. Re-loading the texture for now.
+        tableDiffuse.flipY = false;
+        tableDiffuse.wrapS = THREE.RepeatWrapping;
+        tableDiffuse.wrapT = THREE.RepeatWrapping;
+        tableDiffuse.repeat.set( 10, 6 );
+        objects[13].material = new THREE.MeshLambertMaterial({
+            map: tableDiffuse
+        });
+
         // Dock
         let dockDiffuse = new THREE.TextureLoader().load("wood_texture.jpg");
         dockDiffuse.flipY = false;
         dockDiffuse.wrapS = THREE.RepeatWrapping;
         dockDiffuse.wrapT = THREE.RepeatWrapping;
-        dockDiffuse.repeat.set( 8, 8 );
-        dockDiffuse.anisotropy = renderer.getMaxAnisotropy();
-        objects[14].material = new THREE.MeshLambertMaterial({
-            map: dockDiffuse
+        dockDiffuse.repeat.set( 12, 6 );
+        dockDiffuse.anisotropy = renderer.capabilities.getMaxAnisotropy();
+        let dockSpecular = new THREE.TextureLoader().load("dock_specular_2.png");
+        dockSpecular.flipY = false;
+        dockSpecular.wrapS = THREE.RepeatWrapping;
+        dockSpecular.wrapT = THREE.RepeatWrapping;
+        dockSpecular.repeat.set( 12, 6 );
+        objects[14].material = new THREE.MeshPhongMaterial({
+            map: dockDiffuse,
+            //envMap: bottleRenderTarget.texture,
+            specular: 0xff8133,
+            specularMap: dockSpecular,
+            reflectivity: 0.5,
+            shininess: 40
         })
 
         // Life preserver
@@ -492,7 +528,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
         objects[9].visible = false; // Hide the lamp glass
         objects[4].visible = false; // Hide the bands
-        lampCubeCamera.update( renderer, scene );
+        lanternCubeCamera.update( renderer, scene );
         objects[9].visible = true;
         objects[4].visible = true;
     });
