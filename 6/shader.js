@@ -67,14 +67,14 @@ document.addEventListener("DOMContentLoaded", () => {
 
     // Lighting
     {
-        const color = 0xFFFFFF;
-        const intensity = 1;
+        const color = 0xfd5e53;
+        const intensity = 0.7;
         const sunlight = new THREE.DirectionalLight(color, intensity);
         sunlight.position.set(0, 4, -10);
         sunlight.target.position.set(0, 0, 0);
         scene.add(sunlight);
 
-        const ambientLight = new THREE.AmbientLight(0xffffff, 0.03);
+        const ambientLight = new THREE.AmbientLight(0xffffff, 0.02);
         scene.add(ambientLight);
     }
 
@@ -121,6 +121,82 @@ document.addEventListener("DOMContentLoaded", () => {
         ocean.renderOrder = 1; // allows the water to be visible through the bottle
         objects.push(ocean);
     }
+
+    // Add geometries to hover over and click on
+    let clickables = [];
+    let clickableGeometry = new THREE.PlaneGeometry(0.17, 0.17);
+    // ALL OF THE SQUARES TURN RED INSTANTLY SINCE IT'S THE SAME MATERIAL THROUGHOUT
+    let clickableMaterial = new THREE.MeshBasicMaterial({ 
+        transparent: true,
+        opacity: 0
+    });
+    let clickablesData = [
+        {
+            name: "Contributions",
+            position: new THREE.Vector3(0.01, 1.93, -1.75),
+            scale: new THREE.Vector2(1, 1)
+        },
+        {
+            name: "Chrome Extensions",
+            position: new THREE.Vector3(0.24, 1.93, -1.8),
+            scale: new THREE.Vector2(1.2, 1.2)
+        },
+        {
+            name: "Eye Candy",
+            position: new THREE.Vector3(0.14, 1.93, -1.52),
+            scale: new THREE.Vector2(1, 1)
+        },
+        {
+            name: "Technologies",
+            position: new THREE.Vector3(0.47, 1.93, -1.3),
+            scale: new THREE.Vector2(2.2, 2.2)
+        },
+        {
+            name: "Duda Widgets",
+            position: new THREE.Vector3(-0.28, 1.93, -2),
+            scale: new THREE.Vector2(2.2, 2)
+        },
+        {
+            name: "Games",
+            position: new THREE.Vector3(-0.575, 1.93, -1.8),
+            scale: new THREE.Vector2(1.2, 1.2)
+        },
+        {
+            name: "Websites",
+            position: new THREE.Vector3(-0.68, 1.93, -2.16),
+            scale: new THREE.Vector2(2.4, 2.5)
+        },
+    ];
+
+    for (let i = 0; i < 7; i++) {
+        clickables[i] = new THREE.Mesh(clickableGeometry, clickableMaterial);
+        clickables[i].name = clickablesData[i].name;
+        clickables[i].rotation.x = THREE.Math.degToRad(270);
+        clickables[i].position.set(clickablesData[i].position.x, clickablesData[i].position.y, clickablesData[i].position.z);
+        clickables[i].scale.set(clickablesData[i].scale.x, clickablesData[i].scale.y, clickablesData[i].scale.z);
+        scene.add(clickables[i]);
+    }
+
+    // Add drawn circle sprite
+    let drawnCircleDiffuse = new THREE.TextureLoader().load("circle.png");
+    drawnCircleDiffuse.flipY = false;
+    let drawnCircleAlpha = new THREE.TextureLoader().load("circle_alpha.png");
+    drawnCircleAlpha.flipY = false;
+    let drawnCircleGeometry = new THREE.PlaneGeometry(0.1, 0.1, 1, 1);
+    let drawnCircleMaterial = new THREE.MeshBasicMaterial({
+        alphaMap: drawnCircleAlpha,
+        map: drawnCircleDiffuse,
+        side: THREE.FrontSide,
+        transparent: true
+    });
+    let drawnCircle = new THREE.Mesh(drawnCircleGeometry, drawnCircleMaterial);
+    drawnCircle.rotation.x = THREE.Math.degToRad(270);
+    drawnCircle.position.set(-0.575, 1.92, -1.8);
+    scene.add(drawnCircle);
+
+    // Add Raycast from mouse
+    const raycaster = new THREE.Raycaster();
+    const mouse = new THREE.Vector2();
 
     // Add the table top
     /*let tableGeometry = new THREE.PlaneGeometry(30, 30, 1, 1);
@@ -451,7 +527,7 @@ document.addEventListener("DOMContentLoaded", () => {
         });
 
         // Map
-        let mapDiffuse = new THREE.TextureLoader().load("map_diffuse.jpg");
+        let mapDiffuse = new THREE.TextureLoader().load("skill_islands.jpg");
         mapDiffuse.flipY = false;
         objects[11].material = new THREE.MeshLambertMaterial({
             map: mapDiffuse,
@@ -510,7 +586,7 @@ document.addEventListener("DOMContentLoaded", () => {
         })
 
         // Dock Supports
-        let dockSupportDiffuse = new THREE.TextureLoader().load("dock_support_diffuse_2.png");
+        let dockSupportDiffuse = new THREE.TextureLoader().load("dock_support_diffuse_2.jpg");
         dockSupportDiffuse.flipY = false;
         for (let i = 22; i <= 63; i++) {
             objects[i].material = new THREE.MeshLambertMaterial({
@@ -562,6 +638,8 @@ document.addEventListener("DOMContentLoaded", () => {
         lookAtDirector.addPlan(new CameraPlan(new THREE.Vector3(-3, 0.2, 0), new THREE.Vector3(-5, 0, -1.5), 5, 5, true));
         lookAtDirector.addPlan(new CameraPlan(new THREE.Vector3(-2, 0, -9), new THREE.Vector3(3, -2, 9), 8, 0, false));
     }
+
+    window.addEventListener('mousemove', updateMouseRay, false );
     
     animate();
 
@@ -588,6 +666,19 @@ document.addEventListener("DOMContentLoaded", () => {
 
         updateCubes(clouds, balls, time);
         rockTheBoat(objects[12], time);
+
+        let intersections = getMouseRayIntersections();
+        //for ( let i = 0; i < intersections.length; i ++ ) {
+        if (intersections[0]) {
+            if (intersections[0].object.material.color) {
+                intersections[0].object.material.color.set( 0xff0000 );
+            }
+            /*for (let i = 1; i < intersections.length; i++) {
+
+            }*/
+        }
+            
+        //}
         
         if (!isOrbitCameraOn) {
             // Use the CameraPlans if the orbit camera isn't going to be used.
@@ -646,6 +737,18 @@ document.addEventListener("DOMContentLoaded", () => {
     function generateUV2(geometry) {
         let UVArr = geometry.getAttribute("uv").array;
         geometry.setAttribute('uv2', new THREE.BufferAttribute( UVArr, 2 ));
+    }
+
+    // Return intersections calculated from raycasted mouse
+    function getMouseRayIntersections() {
+        // update the picking ray with the camera and mouse position
+        raycaster.setFromCamera( mouse, camera );
+
+        // calculate objects intersecting the picking ray
+        const intersects = raycaster.intersectObjects( scene.children );
+
+        console.log(intersects);
+        return intersects;
     }
 
     function holderTexture(lightMap, lightMapIntensity) {
@@ -937,6 +1040,13 @@ document.addEventListener("DOMContentLoaded", () => {
 
     }
 
+    function updateMouseRay(e) {
+        // calculate mouse position in normalized device coordinates
+        // (-1 to +1) for both components
+        mouse.x = ( e.clientX / window.innerWidth ) * 2 - 1;
+        mouse.y = - ( e.clientY / window.innerHeight ) * 2 + 1;
+    }
+
     function updateSky(settings) {
         const uniforms = sky.material.uniforms;
         uniforms[ 'turbidity' ].value = settings.turbidity;
@@ -952,6 +1062,10 @@ document.addEventListener("DOMContentLoaded", () => {
         sky.material.uniforms[ 'sunPosition' ].value.copy( sun );
     }
 });
+
+//////////////
+// CLASSES //
+////////////
 
 // make an array of these, then keep moving through the array
 class CameraPlan {
