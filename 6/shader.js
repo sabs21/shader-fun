@@ -1,6 +1,6 @@
 import * as THREE from "./three.module.js";
 import { OrbitControls } from './examples/jsm/controls/OrbitControls.js';
-import { Water } from './examples/jsm/objects/Water.js';
+//import { Water } from './examples/jsm/objects/Water.js';
 import { Water2 } from './examples/jsm/objects/Water2.js';
 import { Water3 } from './examples/jsm/objects/Water3.js';
 import { GLTFLoader } from './examples/jsm/loaders/GLTFLoader.js';
@@ -192,6 +192,7 @@ document.addEventListener("DOMContentLoaded", () => {
     let drawnCircle = new THREE.Mesh(drawnCircleGeometry, drawnCircleMaterial);
     drawnCircle.rotation.x = THREE.Math.degToRad(270);
     drawnCircle.position.set(-0.575, 1.92, -1.8);
+    drawnCircle.name = "Drawn Circle";
     scene.add(drawnCircle);
 
     // Add Raycast from mouse
@@ -667,15 +668,65 @@ document.addEventListener("DOMContentLoaded", () => {
         updateCubes(clouds, balls, time);
         rockTheBoat(objects[12], time);
 
+        // display that the user is hovering over a skill island
         let intersections = getMouseRayIntersections();
         //for ( let i = 0; i < intersections.length; i ++ ) {
-        if (intersections[0]) {
-            if (intersections[0].object.material.color) {
-                intersections[0].object.material.color.set( 0xff0000 );
+        if (intersections[0] && intersections[0].object.name) {
+            //console.log("intersections[0].object.name == \"Games\"", intersections[0].object.name == "Games");
+            //console.log("intersections[0].object.name === \"Games\"", intersections[0].object.name === "Games");
+            switch ((intersections[0].object.name).toString()) {
+                case "Contributions":
+                    console.log("Contributions Hovered");
+                    drawnCircle.position.set(0, 1.93, -1.75);
+                    drawnCircle.scale.set(2.1, 2.1);
+                    break;
+                case "Chrome Extensions":
+                    console.log("Chrome Extensions Hovered");
+                    drawnCircle.position.set(0.23, 1.94, -1.78);
+                    drawnCircle.scale.set(2, 2);
+                    break;
+                case "Eye Candy":
+                    console.log("Eye Candy Hovered");
+                    drawnCircle.position.set(0.15, 1.94, -1.5);
+                    drawnCircle.scale.set(2, 2);
+                    break;
+                case "Technologies":
+                    console.log("Technologies Hovered");
+                    drawnCircle.position.set(0.47, 1.94, -1.3);
+                    drawnCircle.scale.set(3, 3);
+                    break;
+                case "Duda Widgets":
+                    console.log("Duda Widgets Hovered");
+                    drawnCircle.position.set(-0.28, 1.94, -1.95);
+                    drawnCircle.scale.set(3, 3);
+                    break;
+                case "Games":
+                    console.log("Games Hovered");
+                    drawnCircle.position.set(-0.56, 1.94, -1.8);
+                    drawnCircle.scale.set(2, 2);
+                    break;
+                case "Websites":
+                    console.log("Websites Hovered");
+                    drawnCircle.position.set(-0.66, 1.94, -2.12);
+                    drawnCircle.scale.set(4, 4);
+                    break;
+                case "Drawn Circle":
+                    console.log("Drawn Circle Hovered");
+                    break;
+                default:
+                    drawnCircle.position.set(0, -100, 0);
+                    drawnCircle.scale.set(2, 2);
+                    break;
+                //default:
+                    //drawnCircle.position.set(0, 0, 0);
+                /*if (intersections[0].object.material.color) {
+                    intersections[0].object.material.color.set( 0xff0000 );
+                }*/
+                
+                /*for (let i = 1; i < intersections.length; i++) {
+    
+                }*/
             }
-            /*for (let i = 1; i < intersections.length; i++) {
-
-            }*/
         }
             
         //}
