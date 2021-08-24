@@ -10,7 +10,13 @@ import { Sky } from './examples/jsm/objects/Sky.js';
 document.addEventListener("DOMContentLoaded", () => {
     const threeDisplay = document.getElementById("threeDisplay");
 
-    // Globals
+    // DOM Globals
+    const viewMapButton = document.getElementById("viewMap");
+    const sunsetUI = document.getElementById("sunsetUI");
+    const viewSunsetButton = document.getElementById("viewSunset");
+    const mapUI = document.getElementById("mapUI");
+
+    // Three.JS Globals
     const balls = [];
     const lightMapIntensity = 1;
     const isOrbitCameraOn = false;
@@ -629,35 +635,40 @@ document.addEventListener("DOMContentLoaded", () => {
         let baseHeight = 3.5;
         let cameraHeight = 1/aspect + baseHeight;
         if (!landscape) {
-            cameraHeight = aspect + baseHeight*1.5;
+            cameraHeight = 1/aspect + baseHeight*1.25;
         }
 
         // Establish camera positioning plans (camera panning)
         positionDirector = new CameraDirector();
-        positionDirector.addPlan(new CameraPlan(new THREE.Vector3(-0.1, 2.5, 0.5), new THREE.Vector3(-0.1, 2.5, 0.5), 2, 1, false));
-        positionDirector.addPlan(new CameraPlan(new THREE.Vector3(-0.1, 2.5, 0.5), new THREE.Vector3(-0.1, 2.5, 0.5), 2, 1, false));
-        positionDirector.addPlan(new CameraPlan(new THREE.Vector3(-0.1, 2.5, 0.5), new THREE.Vector3(-0.1, cameraHeight, -0.75), 2, 20, true));
-        /*positionDirector.addPlan(new CameraPlan(new THREE.Vector3(8, 0.4, 6), new THREE.Vector3(10, 0.4, 8), 6, 0, true));
-        positionDirector.addPlan(new CameraPlan(new THREE.Vector3(-8, 0.4, -6), new THREE.Vector3(-8, 0.4, -6), 1, 4, false));
-        positionDirector.addPlan(new CameraPlan(new THREE.Vector3(-8, 0.4, -6), new THREE.Vector3(-8, 2, -3), 5, 5, true));
-        positionDirector.addPlan(new CameraPlan(new THREE.Vector3(-9, 8, -18), new THREE.Vector3(-4, 6, 0), 8, 0, false));*/
+        positionDirector.addPlan(new CameraPlan(new THREE.Vector3(-0.1, cameraHeight, -0.75), new THREE.Vector3(-0.1, 2.5, 0.5), 2, 998, true));
+        positionDirector.addPlan(new CameraPlan(new THREE.Vector3(-0.1, 2.5, 0.5), new THREE.Vector3(-0.1, cameraHeight, -0.75), 2, 998, true));
 
         // Establish camera lookAt plans (camera focal point)
         // For a smooth pan, take the movement and subtract the 'to' movement with the 'from' movement. Add this number to the 'from' lookAt numbers. 
         // I.e.: lookAtTo = new THREE.Vector3((posTo.x - posFrom.x) + lookAtFrom.x, (posTo.y - posFrom.y) + lookAtFrom.y, (posTo.z - posFrom.z) + lookAtFrom.z)
         lookAtDirector = new CameraDirector();
-        lookAtDirector.addPlan(new CameraPlan(new THREE.Vector3(-0.1, 2, -5), new THREE.Vector3(-0.1, 2, -5), 2, 1, false));
-        lookAtDirector.addPlan(new CameraPlan(new THREE.Vector3(-0.1, 2, -5), new THREE.Vector3(-0.1, 2, -5), 2, 1, false));
-        lookAtDirector.addPlan(new CameraPlan(new THREE.Vector3(-0.1, 2, -5), new THREE.Vector3(-0.1, 2, -1.5), 1.5, 20.5, true));
-        /*lookAtDirector.addPlan(new CameraPlan(new THREE.Vector3(0, 0, 0), new THREE.Vector3(0, 0, 0), 6, 0, true));
-        lookAtDirector.addPlan(new CameraPlan(new THREE.Vector3(-3, 0.2, 0), new THREE.Vector3(-3, 0.2, 0), 1, 4, false));
-        lookAtDirector.addPlan(new CameraPlan(new THREE.Vector3(-3, 0.2, 0), new THREE.Vector3(-5, 0, -1.5), 5, 5, true));
-        lookAtDirector.addPlan(new CameraPlan(new THREE.Vector3(-2, 0, -9), new THREE.Vector3(3, -2, 9), 8, 0, false));*/
+        lookAtDirector.addPlan(new CameraPlan(new THREE.Vector3(-0.1, 2, -1.5), new THREE.Vector3(-0.1, 2, -5), 2, 998, true));
+        lookAtDirector.addPlan(new CameraPlan(new THREE.Vector3(-0.1, 2, -5), new THREE.Vector3(-0.1, 2, -1.5), 1.5, 998.5, true));
     }
 
     window.addEventListener('mousemove', updateMouseRay, false );
     
     animate();
+
+    // Handle DOM Events (Button presses and such)
+    viewMapButton.addEventListener("click", () => {
+        viewMap(positionDirector);
+        viewMap(lookAtDirector);
+        sunsetUI.className = "ui hidden";
+        mapUI.className = "ui";
+    });
+
+    viewSunsetButton.addEventListener("click", () => {
+        viewSunset(positionDirector);
+        viewSunset(lookAtDirector);
+        sunsetUI.className = "ui";
+        mapUI.className = "ui hidden";
+    })
 
     function addCameraWobble(cameraPosition, time) {
         return new THREE.Vector3(
@@ -688,42 +699,42 @@ document.addEventListener("DOMContentLoaded", () => {
         if (intersections[0] && intersections[0].object.name) {
             switch ((intersections[0].object.name).toString()) {
                 case "Contributions":
-                    console.log("Contributions Hovered");
+                    //console.log("Contributions Hovered");
                     drawnCircle.position.set(0, 1.94, -1.75);
                     drawnCircle.scale.set(2.1, 2.1);
                     break;
                 case "Chrome Extensions":
-                    console.log("Chrome Extensions Hovered");
+                    //console.log("Chrome Extensions Hovered");
                     drawnCircle.position.set(0.23, 1.94, -1.78);
                     drawnCircle.scale.set(2, 2);
                     break;
                 case "Eye Candy":
-                    console.log("Eye Candy Hovered");
+                    //console.log("Eye Candy Hovered");
                     drawnCircle.position.set(0.15, 1.94, -1.5);
                     drawnCircle.scale.set(2, 2);
                     break;
                 case "Technologies":
-                    console.log("Technologies Hovered");
+                    //console.log("Technologies Hovered");
                     drawnCircle.position.set(0.47, 1.94, -1.3);
                     drawnCircle.scale.set(3, 3);
                     break;
                 case "Duda Widgets":
-                    console.log("Duda Widgets Hovered");
+                    //console.log("Duda Widgets Hovered");
                     drawnCircle.position.set(-0.28, 1.94, -1.95);
                     drawnCircle.scale.set(3, 3);
                     break;
                 case "Games":
-                    console.log("Games Hovered");
+                    //console.log("Games Hovered");
                     drawnCircle.position.set(-0.56, 1.94, -1.8);
                     drawnCircle.scale.set(2, 2);
                     break;
                 case "Websites":
-                    console.log("Websites Hovered");
+                    //console.log("Websites Hovered");
                     drawnCircle.position.set(-0.66, 1.94, -2.12);
                     drawnCircle.scale.set(4, 4);
                     break;
                 case "Drawn Circle":
-                    console.log("Drawn Circle Hovered");
+                    //console.log("Drawn Circle Hovered");
                     break;
                 default:
                     drawnCircle.position.set(0, -100, 0);
@@ -799,7 +810,7 @@ document.addEventListener("DOMContentLoaded", () => {
         // calculate objects intersecting the picking ray
         const intersects = raycaster.intersectObjects( scene.children );
 
-        console.log(intersects);
+        //console.log(intersects);
         return intersects;
     }
 
@@ -1131,6 +1142,18 @@ document.addEventListener("DOMContentLoaded", () => {
         sun.setFromSphericalCoords( 1, phi, theta );
         sky.material.uniforms[ 'sunPosition' ].value.copy( sun );
     }
+
+    function viewMap(director) {
+        if (director.getIndex() != 1) {
+            director.setActive(1);
+        }
+    }
+
+    function viewSunset(director) {
+        if (director.getIndex(0) != 0) {
+            director.setActive(0);
+        }
+    }
 });
 
 //////////////
@@ -1222,7 +1245,7 @@ class CameraPlan {
         this.initialTime = null;
     }
 
-    // If the update returns false, the pan has ended.
+    // If the update returns false, the movement has ended.
     update(time) {
         // If initialTime is null, we are beginning the animation. Record the initial time.
         if (!this.initialTime) {
@@ -1263,11 +1286,12 @@ class CameraDirector {
     // constructor takes an array of CameraPlans.
     constructor (plans = null) {
         this.plans = plans ? plans : []; // If plans is null, make an empty array.
-        this.index = 0;
+        this.index = this.plans.length - 1; // This isn't simply 0 because the last plan in the list has to be "updated" in order for the 0th index plan to execute first. Not sure why.
     }
 
     addPlan(plan) {
         this.plans.push(plan);
+        this.index++; // This is necessary for ensuring the 0th index plan actually goes first. Not sure why.
     }
 
     getPlan(index) {

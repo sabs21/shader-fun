@@ -3,17 +3,28 @@
   margin: 0px;
   font-family: "Arial Narrow", Arial, sans-serif;
 }
-html, body {
+html,
+body {
   height: 100%;
 }
 section {
   padding: 10px;
 }
-h1, h2, h3, h4, h5, h6 {
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
   margin-top: 20px;
   margin-bottom: 8px;
 }
-h1:first-child, h2:first-child, h3:first-child, h4:first-child, h5:first-child, h6:first-child {
+h1:first-child,
+h2:first-child,
+h3:first-child,
+h4:first-child,
+h5:first-child,
+h6:first-child {
   margin-top: 0px;
   margin-bottom: 8px;
 }
@@ -35,10 +46,13 @@ h5 {
 h6 {
   font-size: 1.15em;
 }
-p, code, pre {
+p,
+code,
+pre {
   font-size: 1.1em;
 }
-#threeDisplay, canvas {
+#threeDisplay,
+canvas {
   position: relative;
   display: block;
   width: 100%;
@@ -62,7 +76,9 @@ canvas {
   display: block;
   margin-bottom: 8px;
 }
-code, code > b, code > i {
+code,
+code > b,
+code > i {
   font-size: 1em;
   color: rgb(98, 98, 98);
   white-space: pre;
@@ -78,4 +94,32 @@ code, code > b, code > i {
 }
 b > .inline_code {
   font-weight: bold;
+}
+.ui {
+  position: absolute;
+  display: flex;
+  flex-direction: row;
+  justify-content: center;
+  align-items: center;
+  width: 100%;
+  height: 100%;
+  top: 0px;
+  left: 0px;
+  z-index: 1;
+}
+.largeButton {
+  position: relative;
+  display: block;
+  width: 200px;
+  height: 100px;
+  text-align: center;
+  background-color: rgba(0, 0, 0, 0.25);
+  border: 2px solid white;
+  margin-bottom: 100px;
+  font-weight: bold;
+  font-size: 2em;
+  color: white;
+}
+.hidden {
+  display: none;
 }
