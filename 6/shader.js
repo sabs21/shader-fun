@@ -1057,10 +1057,6 @@ document.addEventListener("DOMContentLoaded", () => {
         });
     }
 
-    /*function addAllObjectsToScene(objects) {
-        objects.forEach(object => scene.add(object));
-    }*/
-
     // Fix blockiness by ensuring the size of the canvas's resolution matches with the canvas's css dimensions.
     function resizeRendererToDisplaySize(renderer) {
         const canvas = renderer.domElement;
@@ -1083,7 +1079,7 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     function updateCameraAngledAtMap(baseHeight) {
-        let planIndex = 2;
+        let planIndex = 1;
         if (positionDirector && positionDirector.getPlan(planIndex)) {
             // Calculate how to position the camera to accomodate for various aspect ratios.
             let cameraHeight = 1/aspect + baseHeight;
