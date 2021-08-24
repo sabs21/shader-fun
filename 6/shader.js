@@ -13,7 +13,7 @@ document.addEventListener("DOMContentLoaded", () => {
     // Globals
     const balls = [];
     const lightMapIntensity = 1;
-    const isOrbitCameraOn = true;
+    const isOrbitCameraOn = false;
     const skySettings = {
         turbidity: 10,
         rayleigh: 3,
@@ -41,6 +41,7 @@ document.addEventListener("DOMContentLoaded", () => {
     // Set the camera up
     const fov = 40;
     let aspect = screenDimensions.width / screenDimensions.height;  // the canvas default
+    let landscape = screenDimensions.width > screenDimensions.height;
     const near = 0.1;
     const far = 10000;
     const camera = new THREE.PerspectiveCamera(fov, aspect, near, far);
@@ -57,6 +58,9 @@ document.addEventListener("DOMContentLoaded", () => {
         threeDisplay.style.height = screenDimensions.height + "px";
         renderer.domElement.style.width = screenDimensions.width + "px";
         renderer.domElement.style.height = screenDimensions.height + "px";
+        aspect = screenDimensions.width / screenDimensions.height;
+        landscape = screenDimensions.width > screenDimensions.height;
+        updateCameraAngledAtMap(3.5);
     });
 
     // Sky
@@ -191,7 +195,7 @@ document.addEventListener("DOMContentLoaded", () => {
     });
     let drawnCircle = new THREE.Mesh(drawnCircleGeometry, drawnCircleMaterial);
     drawnCircle.rotation.x = THREE.Math.degToRad(270);
-    drawnCircle.position.set(-0.575, 1.92, -1.8);
+    drawnCircle.position.set(0, -100, 0);
     drawnCircle.name = "Drawn Circle";
     scene.add(drawnCircle);
 
@@ -621,23 +625,34 @@ document.addEventListener("DOMContentLoaded", () => {
         controls.maxDistance = 50;
     }
     else {
+        // Calculate how to position the camera to accomodate for various aspect ratios.
+        let baseHeight = 3.5;
+        let cameraHeight = 1/aspect + baseHeight;
+        if (!landscape) {
+            cameraHeight = aspect + baseHeight*1.5;
+        }
+
         // Establish camera positioning plans (camera panning)
         positionDirector = new CameraDirector();
-        positionDirector.addPlan(new CameraPlan(new THREE.Vector3(8, 1, 10), new THREE.Vector3(-4, 1, 10), 8, 0, false));
-        positionDirector.addPlan(new CameraPlan(new THREE.Vector3(8, 0.4, 6), new THREE.Vector3(10, 0.4, 8), 6, 0, true));
+        positionDirector.addPlan(new CameraPlan(new THREE.Vector3(-0.1, 2.5, 0.5), new THREE.Vector3(-0.1, 2.5, 0.5), 2, 1, false));
+        positionDirector.addPlan(new CameraPlan(new THREE.Vector3(-0.1, 2.5, 0.5), new THREE.Vector3(-0.1, 2.5, 0.5), 2, 1, false));
+        positionDirector.addPlan(new CameraPlan(new THREE.Vector3(-0.1, 2.5, 0.5), new THREE.Vector3(-0.1, cameraHeight, -0.75), 2, 20, true));
+        /*positionDirector.addPlan(new CameraPlan(new THREE.Vector3(8, 0.4, 6), new THREE.Vector3(10, 0.4, 8), 6, 0, true));
         positionDirector.addPlan(new CameraPlan(new THREE.Vector3(-8, 0.4, -6), new THREE.Vector3(-8, 0.4, -6), 1, 4, false));
         positionDirector.addPlan(new CameraPlan(new THREE.Vector3(-8, 0.4, -6), new THREE.Vector3(-8, 2, -3), 5, 5, true));
-        positionDirector.addPlan(new CameraPlan(new THREE.Vector3(-9, 8, -18), new THREE.Vector3(-4, 6, 0), 8, 0, false));
+        positionDirector.addPlan(new CameraPlan(new THREE.Vector3(-9, 8, -18), new THREE.Vector3(-4, 6, 0), 8, 0, false));*/
 
         // Establish camera lookAt plans (camera focal point)
         // For a smooth pan, take the movement and subtract the 'to' movement with the 'from' movement. Add this number to the 'from' lookAt numbers. 
         // I.e.: lookAtTo = new THREE.Vector3((posTo.x - posFrom.x) + lookAtFrom.x, (posTo.y - posFrom.y) + lookAtFrom.y, (posTo.z - posFrom.z) + lookAtFrom.z)
         lookAtDirector = new CameraDirector();
-        lookAtDirector.addPlan(new CameraPlan(new THREE.Vector3(5, 0, 0), new THREE.Vector3(-12, 0, 0), 8, 0, false));
-        lookAtDirector.addPlan(new CameraPlan(new THREE.Vector3(0, 0, 0), new THREE.Vector3(0, 0, 0), 6, 0, true));
+        lookAtDirector.addPlan(new CameraPlan(new THREE.Vector3(-0.1, 2, -5), new THREE.Vector3(-0.1, 2, -5), 2, 1, false));
+        lookAtDirector.addPlan(new CameraPlan(new THREE.Vector3(-0.1, 2, -5), new THREE.Vector3(-0.1, 2, -5), 2, 1, false));
+        lookAtDirector.addPlan(new CameraPlan(new THREE.Vector3(-0.1, 2, -5), new THREE.Vector3(-0.1, 2, -1.5), 1.5, 20.5, true));
+        /*lookAtDirector.addPlan(new CameraPlan(new THREE.Vector3(0, 0, 0), new THREE.Vector3(0, 0, 0), 6, 0, true));
         lookAtDirector.addPlan(new CameraPlan(new THREE.Vector3(-3, 0.2, 0), new THREE.Vector3(-3, 0.2, 0), 1, 4, false));
         lookAtDirector.addPlan(new CameraPlan(new THREE.Vector3(-3, 0.2, 0), new THREE.Vector3(-5, 0, -1.5), 5, 5, true));
-        lookAtDirector.addPlan(new CameraPlan(new THREE.Vector3(-2, 0, -9), new THREE.Vector3(3, -2, 9), 8, 0, false));
+        lookAtDirector.addPlan(new CameraPlan(new THREE.Vector3(-2, 0, -9), new THREE.Vector3(3, -2, 9), 8, 0, false));*/
     }
 
     window.addEventListener('mousemove', updateMouseRay, false );
@@ -646,9 +661,9 @@ document.addEventListener("DOMContentLoaded", () => {
 
     function addCameraWobble(cameraPosition, time) {
         return new THREE.Vector3(
-            cameraPosition.x + (Math.sin(time*3)/30),
-            cameraPosition.y + (Math.sin(time*1.4)/50),
-            cameraPosition.z + (Math.cos(time*2)/36)
+            cameraPosition.x + (Math.sin(time*3)/80),
+            cameraPosition.y + (Math.sin(time*1.4)/90),
+            cameraPosition.z + (Math.cos(time*2)/70)
         )
     }
     
@@ -670,14 +685,11 @@ document.addEventListener("DOMContentLoaded", () => {
 
         // display that the user is hovering over a skill island
         let intersections = getMouseRayIntersections();
-        //for ( let i = 0; i < intersections.length; i ++ ) {
         if (intersections[0] && intersections[0].object.name) {
-            //console.log("intersections[0].object.name == \"Games\"", intersections[0].object.name == "Games");
-            //console.log("intersections[0].object.name === \"Games\"", intersections[0].object.name === "Games");
             switch ((intersections[0].object.name).toString()) {
                 case "Contributions":
                     console.log("Contributions Hovered");
-                    drawnCircle.position.set(0, 1.93, -1.75);
+                    drawnCircle.position.set(0, 1.94, -1.75);
                     drawnCircle.scale.set(2.1, 2.1);
                     break;
                 case "Chrome Extensions":
@@ -717,20 +729,9 @@ document.addEventListener("DOMContentLoaded", () => {
                     drawnCircle.position.set(0, -100, 0);
                     drawnCircle.scale.set(2, 2);
                     break;
-                //default:
-                    //drawnCircle.position.set(0, 0, 0);
-                /*if (intersections[0].object.material.color) {
-                    intersections[0].object.material.color.set( 0xff0000 );
-                }*/
-                
-                /*for (let i = 1; i < intersections.length; i++) {
-    
-                }*/
             }
         }
-            
-        //}
-        
+
         if (!isOrbitCameraOn) {
             // Use the CameraPlans if the orbit camera isn't going to be used.
             newCameraPosition = positionDirector.update(time);
@@ -1070,6 +1071,24 @@ document.addEventListener("DOMContentLoaded", () => {
         }
     }
 
+    function updateCameraAngledAtMap(baseHeight) {
+        let planIndex = 2;
+        if (positionDirector && positionDirector.getPlan(planIndex)) {
+            // Calculate how to position the camera to accomodate for various aspect ratios.
+            let cameraHeight = 1/aspect + baseHeight;
+            if (!landscape) {
+                cameraHeight = 1/aspect + baseHeight*1.25;
+            }
+
+            let plan = positionDirector.getPlan(planIndex); // Get the CameraPlan so that we can edit the height of the camera.
+            let to = plan.getTo();
+            to.y = cameraHeight;
+            plan.setTo(to); // Since the plan variable references the same plan from the positionDirector, I don't have to directly update the positionDirector
+            return true;
+        }
+        return false;
+    }
+
     // this controls content of marching cubes voxel field
     function updateCubes( object, balls, time) {
 
@@ -1135,6 +1154,40 @@ class CameraPlan {
         this.initialTime = null;
         // Boolean governing interpolation function
         this.ease = ease;
+    }
+    getFrom() {
+        return this.from;
+    }
+    setFrom(vec3) {
+        this.from = vec3;
+    }
+
+    getTo() {
+        return this.to;
+    }
+    setTo(vec3) {
+        this.to = vec3;
+    }
+
+    getDuration() {
+        return this.duration;
+    }
+    setDuration(x) {
+        this.duration = x;
+    }
+
+    getStall() {
+        return this.stall;
+    }
+    setStall(x) {
+        this.stall = x;
+    }
+
+    getEase() {
+        return this.ease;
+    }
+    setEase(bool) {
+        this.ease = bool;
     }
 
     /*duration() {
@@ -1215,6 +1268,14 @@ class CameraDirector {
 
     addPlan(plan) {
         this.plans.push(plan);
+    }
+
+    getPlan(index) {
+        return this.plans[index];
+    }
+
+    setPlan(index, CameraPlan) {
+        this.plan[index] = CameraPlan;
     }
 
     getIndex() {
