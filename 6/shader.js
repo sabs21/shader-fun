@@ -135,7 +135,6 @@ document.addEventListener("DOMContentLoaded", () => {
     // Add geometries to hover over and click on
     let clickables = [];
     let clickableGeometry = new THREE.PlaneGeometry(0.17, 0.17);
-    // ALL OF THE SQUARES TURN RED INSTANTLY SINCE IT'S THE SAME MATERIAL THROUGHOUT
     let clickableMaterial = new THREE.MeshBasicMaterial({ 
         transparent: true,
         opacity: 0
@@ -209,142 +208,6 @@ document.addEventListener("DOMContentLoaded", () => {
     const raycaster = new THREE.Raycaster();
     const mouse = new THREE.Vector2();
 
-    // Add the table top
-    /*let tableGeometry = new THREE.PlaneGeometry(30, 30, 1, 1);
-    let tableUVArr = tableGeometry.getAttribute("uv").array; 
-    tableGeometry.setAttribute('uv2', new THREE.BufferAttribute( tableUVArr, 2 )); // create another uv map for the lightmap to use.
-    let tableLightmap = new THREE.TextureLoader().load("table_lightmap.jpg");
-    let tableMaterial = new THREE.MeshLambertMaterial({
-        color: 0xffffff,
-        lightMap: tableLightmap,
-        lightMapIntensity: lightMapIntensity,
-    });
-    let table = new THREE.Mesh(tableGeometry, tableMaterial);
-    table.position.y = -1.4;
-    table.rotation.x = THREE.Math.degToRad(270);
-    table.rotation.z = THREE.Math.degToRad(270);
-    objects.push(table);
-    scene.add(table);
-
-    // Load the map model
-    let mapDiffuse = new THREE.TextureLoader().load("map_diffuse.jpg");
-    mapDiffuse.flipY = false;
-    let mapLightmap = new THREE.TextureLoader().load("map_lightmap.jpg");
-    mapLightmap.flipY = false;
-    new GLTFLoader().load( "./map.glb", function (object) {
-        let map = object.scene;
-        let mapGeometry = map.children[0].geometry;
-        let mapUVArr = mapGeometry.getAttribute("uv").array;
-        mapGeometry.setAttribute('uv2', new THREE.BufferAttribute( mapUVArr, 2 ));
-
-        map.material = new THREE.MeshLambertMaterial({
-            map: mapDiffuse,
-            lightMap: mapLightmap,
-            lightMapIntensity: lightMapIntensity,
-            side: THREE.DoubleSide
-        });
-        let bakedMap = new THREE.Mesh(mapGeometry, map.material);
-
-        //map.position.x = 2.25;
-        bakedMap.position.x = -4;
-        bakedMap.position.y = -1.378;
-        bakedMap.rotation.y = THREE.Math.degToRad(260);
-        bakedMap.scale.set(10, 10, 10);
-        objects.push(bakedMap);
-        scene.add(bakedMap);
-    });
-
-    // Load pin model
-    let pinDiffuse = new THREE.TextureLoader().load("pin_diffuse.png");
-    pinDiffuse.flipY = false;
-    let pinLightmap = new THREE.TextureLoader().load("pin_lightmap.jpg");
-    pinLightmap.flipY = false;
-    new GLTFLoader().load( "./pin.glb", function (object) {
-        let pin = object.scene;
-        let pinGeometry = pin.children[0].geometry;
-        let pinUVArr = pinGeometry.getAttribute("uv").array;
-        pinGeometry.setAttribute('uv2', new THREE.BufferAttribute( pinUVArr, 2 ));
-        pin.material = new THREE.MeshLambertMaterial({
-            map: pinDiffuse,
-            lightMap: pinLightmap,
-            lightMapIntensity: lightMapIntensity,
-            side: THREE.FrontSide
-        });
-        let bakedPin = new THREE.Mesh(pinGeometry, pin.material);
-        //map.position.x = 2.25;
-        bakedPin.position.x = -3.65;
-        bakedPin.position.y = -1.05;
-        bakedPin.position.z = -0.38;
-        bakedPin.rotation.x = THREE.Math.degToRad(165);
-       // pin.rotation.z = THREE.Math.degToRad(5);
-       bakedPin.scale.set(1.5, 1.5, 1.5);
-        objects.push(bakedPin);
-        scene.add(bakedPin);
-    });
-    
-    // Load the bottle model
-    new GLTFLoader().load( "./bottle.glb", function (object) {
-        // Create a glass-like material for the bottle
-        let bottle = object.scene.children[0];
-        bottle.material = new THREE.MeshPhysicalMaterial({
-            //color: 0xf42342,
-            metalness: .4,
-            roughness: .0,
-            emissive: 0xffecab,
-            emissiveIntensity: 0.2,
-            //envMap: envmap.texture,
-            envMapIntensity: 1.0,
-            clearcoat: 0.9,
-            clearcoatRoughness: 0.1,
-            transparent: true,
-            //transmission: .95,
-            opacity: 0.5,
-            reflectivity: 0.2,
-            refractionRatio: 0.985,
-            ior: 0.9,
-            side: THREE.DoubleSide,
-        });
-        bottle.position.x = 2.25;
-        bottle.position.y = 0.5;
-        bottle.renderOrder = 2;
-        objects.push(bottle);
-        scene.add(bottle);
-    });
-
-    // Load the cork model
-    let corkLightmap = new THREE.TextureLoader().load("cork_lightmap.png");
-    corkLightmap.flipY = false; // glTF has a different texture transform than the three.js default. If you’re loading the texture separately try setting texture.flipY = false
-    new GLTFLoader().load( "./cork.glb", function (object) {
-        let cork = object.scene;
-        let corkGeometry = cork.children[0].geometry;
-        cork.material = new THREE.MeshLambertMaterial({
-            color: 0xd9a775,
-            lightMap: corkLightmap,
-            lightMapIntensity: lightMapIntensity,
-        });
-
-        let bakedCork = new THREE.Mesh(corkGeometry, cork.material);
-        bakedCork.position.x = -3.2;
-        bakedCork.position.y = 0.5;
-        objects.push(bakedCork);
-        scene.add(bakedCork);
-    });
-
-    // Load the bottle holder model
-    let holderLightmap = new THREE.TextureLoader().load("holder_lightmap.jpg");
-    holderLightmap.flipY = false; // glTF has a different texture transform than the three.js default. If you’re loading the texture separately try setting texture.flipY = false
-    new GLTFLoader().load( "./holder.glb", function (object) {
-        let bottleHolder = object.scene;
-        let bottleHolderGeometry = bottleHolder.children[0].geometry;
-        bottleHolder.material = holderTexture(holderLightmap, lightMapIntensity);
-        let holder = new THREE.Mesh(bottleHolderGeometry, bottleHolder.material);
-        holder.position.x = 0.26;
-        holder.position.y = -1.42;
-        holder.position.z = 0.09;
-        objects.push(holder);
-        scene.add(holder);
-    });*/
-
     // Clouds (Marching Cubes)
     const cloudResolution = 16;
     let colorTop = new THREE.Vector3(0.980, 0.961, 0.855);
@@ -358,68 +221,8 @@ document.addEventListener("DOMContentLoaded", () => {
     clouds.scale.set( 0.27, 0.1, 0.1 );
     scene.add( clouds );
 
-    // Load the hurricane lantern
-    /*let hurricaneLanternLightmap = new THREE.TextureLoader().load("hurricane_lamp_lightmap.jpg");
-    hurricaneLanternLightmap.flipY = false;
-    new GLTFLoader().load( "./hurricane_lantern.glb", function (object) {
-        let hurricaneLantern = object.scene;
-
-        // Import the base
-        let lampBaseGeometry = hurricaneLantern.children[0].geometry;
-        let lampBaseUVArr = lampBaseGeometry.getAttribute("uv").array;
-        lampBaseGeometry.setAttribute('uv2', new THREE.BufferAttribute( lampBaseUVArr, 2 ));
-        let lampBaseMaterial = new THREE.MeshLambertMaterial({
-            color: 0x1258f0,
-            specular: 0x43431e,
-            shininess: 1
-        });
-        let lampBase = new THREE.Mesh(lampBaseGeometry, lampBaseMaterial);
-        lampBase.position.y = -1.313;
-        lampBase.position.z = -3;
-        objects.push(lampBase);
-        scene.add(lampBase);
-
-        // Import the glass
-        let glassGeometry = hurricaneLantern.children[1].geometry;
-        let glassUVArr = glassGeometry.getAttribute("uv").array;
-        glassGeometry.setAttribute('uv2', new THREE.BufferAttribute( glassUVArr, 2 ));
-        let glassMaterial = new THREE.MeshPhysicalMaterial({
-            metalness: .4,
-            roughness: .0,
-            emissive: 0xffecab,
-            emissiveIntensity: 0.2,
-            envMapIntensity: 1.0,
-            clearcoat: 0.9,
-            clearcoatRoughness: 0.1,
-            transparent: true,
-            opacity: 0.5,
-            reflectivity: 0.2,
-            refractionRatio: 0.985,
-            ior: 0.9,
-            side: THREE.DoubleSide,
-        });
-        let glass = new THREE.Mesh(glassGeometry, glassMaterial);
-        glass.position.y = -1.313;
-        glass.position.z = -3;
-        objects.push(glass);
-        scene.add(glass);
-
-        // Import the bands
-        let bandsGeometry = hurricaneLantern.children[2].geometry;
-        let bandsUVArr = bandsGeometry.getAttribute("uv").array;
-        bandsGeometry.setAttribute('uv2', new THREE.BufferAttribute( bandsUVArr, 2 ));
-        let bandsMaterial = new THREE.MeshLambertMaterial({
-            color: 0xffd700,
-        });
-        let bands = new THREE.Mesh(bandsGeometry, bandsMaterial);
-        //bands.scale.set(0.9, 0.9, 0.9);
-        bands.position.y = -1.313;
-        bands.position.z = -3;
-        objects.push(bands);
-        scene.add(bands);
-    });*/
-
-    loadScene("./scene11.glb")
+    // Load the scene and its objects
+    loadScene("./scene.glb")
     .then((sceneObjects) => {
         // Merge both object arrays into one using the spread operator.
         objects = [...objects, ...sceneObjects];
@@ -535,14 +338,14 @@ document.addEventListener("DOMContentLoaded", () => {
         objects[9].renderOrder = 2;
 
         // Holder
-        let holderDiffuse = new THREE.TextureLoader().load("wood_texture_2.jpg");
+        let holderDiffuse = new THREE.TextureLoader().load("wood_texture.jpg");
         holderDiffuse.flipY = false;
         objects[10].material = new THREE.MeshLambertMaterial({
             map: holderDiffuse
         });
 
         // Map
-        let mapDiffuse = new THREE.TextureLoader().load("skill_islands.jpg");
+        let mapDiffuse = new THREE.TextureLoader().load("map_diffuse.jpg");
         mapDiffuse.flipY = false;
         objects[11].material = new THREE.MeshLambertMaterial({
             map: mapDiffuse,
@@ -563,7 +366,7 @@ document.addEventListener("DOMContentLoaded", () => {
         });
 
         // Table top
-        let tableDiffuse = new THREE.TextureLoader().load("wood_texture_2.jpg"); // TODO: Should reuse holderDiffuse, but cloning is not working. Re-loading the texture for now.
+        let tableDiffuse = new THREE.TextureLoader().load("wood_texture.jpg"); // TODO: Should reuse holderDiffuse, but cloning is not working. Re-loading the texture for now.
         tableDiffuse.flipY = false;
         tableDiffuse.wrapS = THREE.RepeatWrapping;
         tableDiffuse.wrapT = THREE.RepeatWrapping;
@@ -671,7 +474,7 @@ document.addEventListener("DOMContentLoaded", () => {
         objects[67].renderOrder = 1;
 
         // Dock
-        let dockDiffuse = new THREE.TextureLoader().load("wood_texture.jpg");
+        let dockDiffuse = new THREE.TextureLoader().load("dock_diffuse.jpg");
         dockDiffuse.flipY = false;
         dockDiffuse.wrapS = THREE.RepeatWrapping;
         dockDiffuse.wrapT = THREE.RepeatWrapping;
