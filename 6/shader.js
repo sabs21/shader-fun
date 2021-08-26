@@ -19,7 +19,7 @@ document.addEventListener("DOMContentLoaded", () => {
     // Three.JS Globals
     const balls = [];
     const lightMapIntensity = 1;
-    const isOrbitCameraOn = false;
+    const isOrbitCameraOn = true;
     const skySettings = {
         turbidity: 10,
         rayleigh: 3,
@@ -419,7 +419,7 @@ document.addEventListener("DOMContentLoaded", () => {
         scene.add(bands);
     });*/
 
-    loadScene("./scene4.glb")
+    loadScene("./scene11.glb")
     .then((sceneObjects) => {
         // Merge both object arrays into one using the spread operator.
         objects = [...objects, ...sceneObjects];
@@ -448,6 +448,10 @@ document.addEventListener("DOMContentLoaded", () => {
         // object[20]: Ladder (Left, Closer)
         // object[21]: Ladder (Left, Further)
         // object[22 - 63]: Dock Supports (1 to 42)
+        // object[64]: Landscape
+        // object[65]: Plants Back
+        // object[66]: Plants Front
+        // object[67]: Trees
 
         // Bottle Cube Camera
         // Create cube render target. This holds the environment map texture that the CubeCamera generates.
@@ -568,42 +572,155 @@ document.addEventListener("DOMContentLoaded", () => {
             map: tableDiffuse
         });
 
+        // Life preserver
+        let lifePreserverDiffuse = new THREE.TextureLoader().load("life_preserver_diffuse.png");
+        lifePreserverDiffuse.flipY = false;
+        objects[16].material = new THREE.MeshLambertMaterial({
+            map: lifePreserverDiffuse
+        })
+
+        // Dock Supports
+        let dockSupportDiffuse = new THREE.TextureLoader().load("dock_support_diffuse.jpg");
+        dockSupportDiffuse.flipY = false;
+        for (let i = 21; i <= 62; i++) {
+            objects[i].material = new THREE.MeshLambertMaterial({
+                map: dockSupportDiffuse
+            })
+        }
+
+        // Landscape
+        let landscapeDiffuse = new THREE.TextureLoader().load("landscape_diffuse.jpg");
+        landscapeDiffuse.flipY = false;
+        let landscapeNormal = new THREE.TextureLoader().load("landscape_normal.jpg");
+        landscapeNormal.flipY = false;
+        objects[63].material = new THREE.MeshPhongMaterial({
+            map: landscapeDiffuse,
+            normalMap: landscapeNormal,
+        })
+
+        // Plants Back
+        let backGrassDiffuse = new THREE.TextureLoader().load("grass_diffuse.jpg");
+        backGrassDiffuse.flipY = false;
+        let backGrassAlpha = new THREE.TextureLoader().load("grass_alpha.jpg");
+        backGrassAlpha.flipY = false;
+        let backGrassLightmap = new THREE.TextureLoader().load("grass_lightmap.jpg");
+        backGrassLightmap.flipY = false;
+        let grassUVArr = objects[64].geometry.getAttribute("uv").array;
+        objects[64].geometry.setAttribute('uv2', new THREE.BufferAttribute( grassUVArr, 2 ));
+        objects[64].material = new THREE.MeshLambertMaterial({
+            alphaMap: backGrassAlpha,
+            map: backGrassDiffuse,
+            lightMap: backGrassLightmap,
+            lightMapIntensity: 1,
+            transparent: true
+        });
+        objects[64].renderOrder = 3;
+
+        // Plants Front
+        let frontGrassDiffuse = new THREE.TextureLoader().load("grass_diffuse.jpg");
+        frontGrassDiffuse.flipY = false;
+        let frontGrassAlpha = new THREE.TextureLoader().load("grass_alpha.jpg");
+        frontGrassAlpha.flipY = false;
+        let frontGrassLightmap = new THREE.TextureLoader().load("grass_lightmap.jpg");
+        frontGrassLightmap.flipY = false;
+        grassUVArr = objects[65].geometry.getAttribute("uv").array;
+        objects[65].geometry.setAttribute('uv2', new THREE.BufferAttribute( grassUVArr, 2 ));
+        objects[65].material = new THREE.MeshLambertMaterial({
+            alphaMap: frontGrassAlpha,
+            map: frontGrassDiffuse,
+            lightMap: frontGrassLightmap,
+            lightMapIntensity: 1,
+            transparent: true
+        });
+        objects[65].renderOrder = 4;
+
+        // Tree_1
+        let frontTreeDiffuse = new THREE.TextureLoader().load("tree_diffuse.jpg");
+        frontTreeDiffuse.flipY = false;
+        let frontTreeAlpha = new THREE.TextureLoader().load("tree_alpha.jpg");
+        frontTreeAlpha.flipY = false;
+        let frontTreeLightmap = new THREE.TextureLoader().load("tree_lightmap.jpg");
+        frontTreeLightmap.flipY = false;
+        let treeUVArr = objects[67].geometry.getAttribute("uv").array;
+        objects[66].geometry.setAttribute('uv2', new THREE.BufferAttribute( treeUVArr, 2 ));
+        objects[66].material = new THREE.MeshLambertMaterial({
+            alphaMap: frontTreeAlpha,
+            map: frontTreeDiffuse,
+            lightMap: frontTreeLightmap,
+            lightMapIntensity: 1,
+            transparent: true
+        });
+        objects[66].renderOrder = 2;
+
+        // Tree_2
+        let backTreeDiffuse = new THREE.TextureLoader().load("tree2_diffuse.jpg");
+        backTreeDiffuse.flipY = false;
+        let backTreeAlpha = new THREE.TextureLoader().load("tree2_alpha.jpg");
+        backTreeAlpha.flipY = false;
+        let backTreeLightmap = new THREE.TextureLoader().load("tree_lightmap.jpg");
+        backTreeLightmap.flipY = false;
+        treeUVArr = objects[67].geometry.getAttribute("uv").array;
+        objects[67].geometry.setAttribute('uv2', new THREE.BufferAttribute( treeUVArr, 2 ));
+        objects[67].material = new THREE.MeshLambertMaterial({
+            alphaMap: backTreeAlpha,
+            map: backTreeDiffuse,
+            lightMap: backTreeLightmap,
+            lightMapIntensity: 0.9,
+            transparent: true
+        });
+        objects[67].renderOrder = 1;
+
         // Dock
         let dockDiffuse = new THREE.TextureLoader().load("wood_texture.jpg");
         dockDiffuse.flipY = false;
         dockDiffuse.wrapS = THREE.RepeatWrapping;
         dockDiffuse.wrapT = THREE.RepeatWrapping;
-        dockDiffuse.repeat.set( 12, 6 );
+        dockDiffuse.repeat.set( 12, 6);
         dockDiffuse.anisotropy = renderer.capabilities.getMaxAnisotropy();
-        let dockSpecular = new THREE.TextureLoader().load("dock_specular_2.png");
+        let dockSpecular = new THREE.TextureLoader().load("dock_specular.png");
         dockSpecular.flipY = false;
         dockSpecular.wrapS = THREE.RepeatWrapping;
         dockSpecular.wrapT = THREE.RepeatWrapping;
         dockSpecular.repeat.set( 12, 6 );
-        objects[14].material = new THREE.MeshPhongMaterial({
+        objects[68].material = new THREE.MeshPhongMaterial({
             map: dockDiffuse,
-            //envMap: bottleRenderTarget.texture,
             specular: 0xff8133,
             specularMap: dockSpecular,
             reflectivity: 0.5,
             shininess: 40
-        })
+        });
 
-        // Life preserver
-        let lifePreserverDiffuse = new THREE.TextureLoader().load("life_preserver_diffuse.png");
-        lifePreserverDiffuse.flipY = false;
-        objects[17].material = new THREE.MeshLambertMaterial({
-            map: lifePreserverDiffuse
-        })
+        // Distant Island
+        let distantIslandDiffuse = new THREE.TextureLoader().load("distant_island_diffuse.png");
+        distantIslandDiffuse.flipY = false;
+        objects[69].material = new THREE.MeshLambertMaterial({
+            map: distantIslandDiffuse
+        });
 
-        // Dock Supports
-        let dockSupportDiffuse = new THREE.TextureLoader().load("dock_support_diffuse_2.jpg");
-        dockSupportDiffuse.flipY = false;
-        for (let i = 22; i <= 63; i++) {
-            objects[i].material = new THREE.MeshLambertMaterial({
-                map: dockSupportDiffuse
-            })
-        }
+        // Distant Trees
+        let distantTreesDiffuse = new THREE.TextureLoader().load("distant_trees_diffuse.jpg");
+        distantTreesDiffuse.flipY = false;
+        let distantTreesAlpha = new THREE.TextureLoader().load("distant_trees_alpha.jpg");
+        distantTreesAlpha.flipY = false;
+        let distantTreesLightmap = new THREE.TextureLoader().load("tree_lightmap.jpg");
+        distantTreesLightmap.flipY = false;
+        let distantTreesUVArr = objects[70].geometry.getAttribute("uv").array;
+        objects[70].geometry.setAttribute('uv2', new THREE.BufferAttribute( distantTreesUVArr, 2 ));
+        objects[70].material = new THREE.MeshLambertMaterial({
+            alphaMap: distantTreesAlpha,
+            map: distantTreesDiffuse,
+            lightMap: distantTreesLightmap,
+            lightMapIntensity: 0.9,
+            transparent: true
+        });
+        objects[70].renderOrder = 1;
+
+        // Lighthouse
+        let lighthouseDiffuse = new THREE.TextureLoader().load("lighthouse_diffuse.png");
+        lighthouseDiffuse.flipY = false;
+        objects[71].material = new THREE.MeshLambertMaterial({
+            map: lighthouseDiffuse
+        });
 
         // Add all objects to the scene.
         objects.forEach(object => scene.add(object));
