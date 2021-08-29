@@ -9,11 +9,14 @@
 </head>
 <body>
     <div id="threeDisplay" style="z-index: 0;"></div>
-    <div id="sunsetUI" class="ui">
+    <div id="sunsetUI" class="invisible ui">
       <button id="viewMap" class="largeButton">Set Sail</button>
     </div>
-    <div id="mapUI" class="ui hidden">
+    <div id="mapUI" class="invisible ui hidden">
       <button id="viewSunset" class="largeButton">Back to Sunset</button>
+    </div>
+    <div id="loadingUI" class="ui">
+      <canvas id="loadingBar" width=600 height=600></canvas>
     </div>
 </body>
 </html>

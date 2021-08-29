@@ -100,12 +100,13 @@ b > .inline_code {
   display: flex;
   flex-direction: row;
   justify-content: center;
-  align-items: center;
+  align-items: flex-start;
   width: 100%;
   height: 100%;
   top: 0px;
   left: 0px;
   z-index: 1;
+  transition: opacity 1s ease;
 }
 .largeButton {
   position: relative;
@@ -115,11 +116,26 @@ b > .inline_code {
   text-align: center;
   background-color: rgba(0, 0, 0, 0.25);
   border: 2px solid white;
-  margin-bottom: 100px;
+  margin-top: 6%;
   font-weight: bold;
   font-size: 2em;
   color: white;
 }
 .hidden {
   display: none;
+}
+#loadingUI {
+  background-color: #333333;
+  align-items: center;
+}
+#loadingBar {
+  position: absolute;
+  border-radius: 50%;
+  overflow: hidden;
+  width: 16em;
+  height: 16em;
+  background: none;
+}
+.invisible {
+  opacity: 0;
 }
