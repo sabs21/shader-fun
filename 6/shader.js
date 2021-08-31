@@ -172,7 +172,7 @@ document.addEventListener("DOMContentLoaded", () => {
     });
     let clickablesData = [
         {
-            name: "Contributions",
+            name: "Web Apps",
             position: new THREE.Vector3(0.01, 1.93, -1.75),
             scale: new THREE.Vector2(1, 1)
         },
@@ -187,7 +187,7 @@ document.addEventListener("DOMContentLoaded", () => {
             scale: new THREE.Vector2(1, 1)
         },
         {
-            name: "Technologies",
+            name: "Other Skills",
             position: new THREE.Vector3(0.47, 1.93, -1.3),
             scale: new THREE.Vector2(2.2, 2.2)
         },
@@ -555,12 +555,12 @@ document.addEventListener("DOMContentLoaded", () => {
         });
 
         // Map
-        let mapDiffuse = new THREE.TextureLoader().load("map_diffuse.jpg");
+        /*let mapDiffuse = new THREE.TextureLoader().load("map_diffuse.jpg");
         mapDiffuse.flipY = false;
         objects[71].material = new THREE.MeshLambertMaterial({
             map: mapDiffuse,
             side: THREE.DoubleSide
-        });
+        });*/
 
         // Add all objects to the scene.
         objects.forEach(object => scene.add(object));
@@ -655,7 +655,7 @@ document.addEventListener("DOMContentLoaded", () => {
         let intersections = getMouseRayIntersections();
         if (intersections[0] && intersections[0].object.name) {
             switch ((intersections[0].object.name).toString()) {
-                case "Contributions":
+                case "Web Apps":
                     //console.log("Contributions Hovered");
                     drawnCircle.position.set(-0.02, 1.932, -1.75);
                     drawnCircle.scale.set(2.1, 2.1);
@@ -670,7 +670,7 @@ document.addEventListener("DOMContentLoaded", () => {
                     drawnCircle.position.set(0.13, 1.932, -1.51);
                     drawnCircle.scale.set(2, 2);
                     break;
-                case "Technologies":
+                case "Other Skills":
                     //console.log("Technologies Hovered");
                     drawnCircle.position.set(0.47, 1.932, -1.33);
                     drawnCircle.scale.set(3, 3);
