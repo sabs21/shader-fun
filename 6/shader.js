@@ -214,6 +214,7 @@ document.addEventListener("DOMContentLoaded", () => {
         clickables[i].rotation.x = THREE.Math.degToRad(270);
         clickables[i].position.set(clickablesData[i].position.x, clickablesData[i].position.y, clickablesData[i].position.z);
         clickables[i].scale.set(clickablesData[i].scale.x, clickablesData[i].scale.y, clickablesData[i].scale.z);
+        clickables[i].renderOrder = 2;
         scene.add(clickables[i]);
     }
 
@@ -555,12 +556,12 @@ document.addEventListener("DOMContentLoaded", () => {
         });
 
         // Map
-        /*let mapDiffuse = new THREE.TextureLoader().load("map_diffuse.jpg");
+        let mapDiffuse = new THREE.TextureLoader().load("map_diffuse.jpg");
         mapDiffuse.flipY = false;
         objects[71].material = new THREE.MeshLambertMaterial({
             map: mapDiffuse,
             side: THREE.DoubleSide
-        });*/
+        });
 
         // Add all objects to the scene.
         objects.forEach(object => scene.add(object));
