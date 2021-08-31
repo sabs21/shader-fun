@@ -136,7 +136,7 @@ document.addEventListener("DOMContentLoaded", () => {
         } );
         bottleWater.rotation.x = THREE.Math.degToRad(270);
         bottleWater.rotation.z = THREE.Math.degToRad(280);
-        bottleWater.position.set(0.44, 2.023, -2.09);
+        bottleWater.position.set(0.69, 2.023, -1.71);
         bottleWater.scale.set(0.1, 0.1, 0.1);
         bottleWater.renderOrder = 1; // allows the water to be visible through the bottle
         objects.push(bottleWater);
@@ -247,7 +247,7 @@ document.addEventListener("DOMContentLoaded", () => {
     const totalBalls = 7;
     initMarchingCubeBallSeeds(totalBalls); // Give each ball a random seed so that each ball's movement pattern differs.
     const clouds = new MarchingCubes( cloudResolution, cloudMaterial, false, false );
-    clouds.position.set( 0.46, 2.18, -2.10 );
+    clouds.position.set( 0.71, 2.18, -1.72 );
     clouds.rotation.y = THREE.Math.degToRad(10);
     clouds.scale.set( 0.27, 0.1, 0.1 );
     scene.add( clouds );
@@ -259,33 +259,37 @@ document.addEventListener("DOMContentLoaded", () => {
         objects = [...objects, ...sceneObjects];
 
         console.log(objects);
-        // object[0]:  Water in bottle
-        // object[1]:  Ocean water
-        // object[2]:  Right barrel
-        // object[3]:  Left barrel
-        // object[4]:  Bands (Hurricane Lantern)
-        // object[5]:  Base (Hurricane Lantern)
-        // object[6]:  Bottle (Ship in a Bottle)
-        // object[7]:  Pin
-        // object[8]:  Cork (Ship in a Bottle)
-        // object[9]:  Glass (Hurricane Lantern)
-        // object[10]: Holder (Ship in a Bottle)
-        // object[11]: Map
-        // object[12]: Ship (Ship in a Bottle)
-        // object[13]: Tabletop
-        // object[14]: Dock
-        // object[15]: Ladder (Right, Closer)
-        // object[16]: Lightpole
-        // object[17]: Life Preserver
-        // object[18]: Life Preserver String
-        // object[19]: Ladder (Right, Further)
-        // object[20]: Ladder (Left, Closer)
-        // object[21]: Ladder (Left, Further)
-        // object[22 - 63]: Dock Supports (1 to 42)
-        // object[64]: Landscape
-        // object[65]: Plants Back
-        // object[66]: Plants Front
-        // object[67]: Trees
+        // objects[0]:  Water in bottle
+        // objects[1]:  Ocean water
+        // objects[2]:  Right barrel
+        // objects[3]:  Left barrel
+        // objects[4]:  Bands (Hurricane Lantern)
+        // objects[5]:  Base (Hurricane Lantern)
+        // objects[6]:  Bottle (Ship in a Bottle)
+        // objects[7]:  Pin
+        // objects[8]:  Cork (Ship in a Bottle)
+        // objects[9]:  Glass (Hurricane Lantern)
+        // objects[10]: Holder (Ship in a Bottle)
+        // objects[11]: Ship (Ship in a Bottle)
+        // objects[12]: Tabletop
+        // objects[13]: Ladder (Right, Closer)
+        // objects[14]: Lightpole
+        // objects[15]: Life Preserver
+        // objects[16]: Life Preserver String
+        // objects[17]: Ladder (Right, Further)
+        // objects[18]: Ladder (Left, Closer)
+        // objects[19]: Ladder (Left, Further)
+        // objects[20 - 61]: Dock Supports (1 to 42)
+        // objects[62]: Landscape
+        // objects[63]: Plants Back
+        // objects[64]: Plants Front
+        // objects[65]: Tree_1
+        // objects[66]: Tree_2
+        // objects[67]: Dock
+        // objects[68]: Distant Island
+        // objects[69]: Distant Trees
+        // objects[70]: Lighthouse
+        // objects[71]: Map
 
         // Bottle Cube Camera
         // Create cube render target. This holds the environment map texture that the CubeCamera generates.
@@ -375,26 +379,20 @@ document.addEventListener("DOMContentLoaded", () => {
             map: holderDiffuse
         });
 
-        // Map
-        let mapDiffuse = new THREE.TextureLoader().load("map_diffuse.jpg");
-        mapDiffuse.flipY = false;
-        objects[11].material = new THREE.MeshLambertMaterial({
-            map: mapDiffuse,
-            side: THREE.DoubleSide
-        });
-
         // Ship (Ship in a Bottle)
-        objects[12].position.set(0.44, 2.083, -2.09); // Place ship into correct position.
+        objects[11].position.set(0.73, 2.083, -1.7); // Place ship into correct position.
         let shipDiffuse = new THREE.TextureLoader().load("ship_diffuse.png");
         shipDiffuse.flipY = false;
         let shipLightmap = new THREE.TextureLoader().load("ship_lightmap.jpg");
         shipLightmap.flipY = false;
-        generateUV2(objects[12].geometry);
-        objects[12].material = new THREE.MeshLambertMaterial({
+        generateUV2(objects[11].geometry);
+        objects[11].material = new THREE.MeshLambertMaterial({
             map: shipDiffuse,
             lightMap: shipLightmap,
             lightMapIntensity: lightMapIntensity,
         });
+        //objects[11].position.set(0.69, 2.023, -1.71)
+        
 
         // Table top
         let tableDiffuse = new THREE.TextureLoader().load("wood_texture.jpg"); // TODO: Should reuse holderDiffuse, but cloning is not working. Re-loading the texture for now.
@@ -402,21 +400,21 @@ document.addEventListener("DOMContentLoaded", () => {
         tableDiffuse.wrapS = THREE.RepeatWrapping;
         tableDiffuse.wrapT = THREE.RepeatWrapping;
         tableDiffuse.repeat.set( 10, 6 );
-        objects[13].material = new THREE.MeshLambertMaterial({
+        objects[12].material = new THREE.MeshLambertMaterial({
             map: tableDiffuse
         });
 
         // Life preserver
         let lifePreserverDiffuse = new THREE.TextureLoader().load("life_preserver_diffuse.png");
         lifePreserverDiffuse.flipY = false;
-        objects[16].material = new THREE.MeshLambertMaterial({
+        objects[15].material = new THREE.MeshLambertMaterial({
             map: lifePreserverDiffuse
         })
 
         // Dock Supports
         let dockSupportDiffuse = new THREE.TextureLoader().load("dock_support_diffuse.jpg");
         dockSupportDiffuse.flipY = false;
-        for (let i = 21; i <= 62; i++) {
+        for (let i = 20; i <= 61; i++) {
             objects[i].material = new THREE.MeshLambertMaterial({
                 map: dockSupportDiffuse
             })
@@ -427,7 +425,7 @@ document.addEventListener("DOMContentLoaded", () => {
         landscapeDiffuse.flipY = false;
         let landscapeNormal = new THREE.TextureLoader().load("landscape_normal.jpg");
         landscapeNormal.flipY = false;
-        objects[63].material = new THREE.MeshPhongMaterial({
+        objects[62].material = new THREE.MeshPhongMaterial({
             map: landscapeDiffuse,
             normalMap: landscapeNormal,
         })
@@ -440,15 +438,15 @@ document.addEventListener("DOMContentLoaded", () => {
         let backGrassLightmap = new THREE.TextureLoader().load("grass_lightmap.jpg");
         backGrassLightmap.flipY = false;
         let grassUVArr = objects[64].geometry.getAttribute("uv").array;
-        objects[64].geometry.setAttribute('uv2', new THREE.BufferAttribute( grassUVArr, 2 ));
-        objects[64].material = new THREE.MeshLambertMaterial({
+        objects[63].geometry.setAttribute('uv2', new THREE.BufferAttribute( grassUVArr, 2 ));
+        objects[63].material = new THREE.MeshLambertMaterial({
             alphaMap: backGrassAlpha,
             map: backGrassDiffuse,
             lightMap: backGrassLightmap,
             lightMapIntensity: 1,
             transparent: true
         });
-        objects[64].renderOrder = 3;
+        objects[63].renderOrder = 3;
 
         // Plants Front
         let frontGrassDiffuse = new THREE.TextureLoader().load("grass_diffuse.jpg");
@@ -457,16 +455,16 @@ document.addEventListener("DOMContentLoaded", () => {
         frontGrassAlpha.flipY = false;
         let frontGrassLightmap = new THREE.TextureLoader().load("grass_lightmap.jpg");
         frontGrassLightmap.flipY = false;
-        grassUVArr = objects[65].geometry.getAttribute("uv").array;
-        objects[65].geometry.setAttribute('uv2', new THREE.BufferAttribute( grassUVArr, 2 ));
-        objects[65].material = new THREE.MeshLambertMaterial({
+        grassUVArr = objects[64].geometry.getAttribute("uv").array;
+        objects[64].geometry.setAttribute('uv2', new THREE.BufferAttribute( grassUVArr, 2 ));
+        objects[64].material = new THREE.MeshLambertMaterial({
             alphaMap: frontGrassAlpha,
             map: frontGrassDiffuse,
             lightMap: frontGrassLightmap,
             lightMapIntensity: 1,
             transparent: true
         });
-        objects[65].renderOrder = 4;
+        objects[64].renderOrder = 4;
 
         // Tree_1
         let frontTreeDiffuse = new THREE.TextureLoader().load("tree_diffuse.jpg");
@@ -475,16 +473,16 @@ document.addEventListener("DOMContentLoaded", () => {
         frontTreeAlpha.flipY = false;
         let frontTreeLightmap = new THREE.TextureLoader().load("tree_lightmap.jpg");
         frontTreeLightmap.flipY = false;
-        let treeUVArr = objects[67].geometry.getAttribute("uv").array;
-        objects[66].geometry.setAttribute('uv2', new THREE.BufferAttribute( treeUVArr, 2 ));
-        objects[66].material = new THREE.MeshLambertMaterial({
+        let treeUVArr = objects[65].geometry.getAttribute("uv").array;
+        objects[65].geometry.setAttribute('uv2', new THREE.BufferAttribute( treeUVArr, 2 ));
+        objects[65].material = new THREE.MeshLambertMaterial({
             alphaMap: frontTreeAlpha,
             map: frontTreeDiffuse,
             lightMap: frontTreeLightmap,
             lightMapIntensity: 1,
             transparent: true
         });
-        objects[66].renderOrder = 2;
+        objects[65].renderOrder = 2;
 
         // Tree_2
         let backTreeDiffuse = new THREE.TextureLoader().load("tree2_diffuse.jpg");
@@ -493,16 +491,16 @@ document.addEventListener("DOMContentLoaded", () => {
         backTreeAlpha.flipY = false;
         let backTreeLightmap = new THREE.TextureLoader().load("tree_lightmap.jpg");
         backTreeLightmap.flipY = false;
-        treeUVArr = objects[67].geometry.getAttribute("uv").array;
-        objects[67].geometry.setAttribute('uv2', new THREE.BufferAttribute( treeUVArr, 2 ));
-        objects[67].material = new THREE.MeshLambertMaterial({
+        treeUVArr = objects[66].geometry.getAttribute("uv").array;
+        objects[66].geometry.setAttribute('uv2', new THREE.BufferAttribute( treeUVArr, 2 ));
+        objects[66].material = new THREE.MeshLambertMaterial({
             alphaMap: backTreeAlpha,
             map: backTreeDiffuse,
             lightMap: backTreeLightmap,
             lightMapIntensity: 0.9,
             transparent: true
         });
-        objects[67].renderOrder = 1;
+        objects[66].renderOrder = 1;
 
         // Dock
         let dockDiffuse = new THREE.TextureLoader().load("dock_diffuse.jpg");
@@ -516,7 +514,7 @@ document.addEventListener("DOMContentLoaded", () => {
         dockSpecular.wrapS = THREE.RepeatWrapping;
         dockSpecular.wrapT = THREE.RepeatWrapping;
         dockSpecular.repeat.set( 12, 6 );
-        objects[68].material = new THREE.MeshPhongMaterial({
+        objects[67].material = new THREE.MeshPhongMaterial({
             map: dockDiffuse,
             specular: 0xff8133,
             specularMap: dockSpecular,
@@ -527,7 +525,7 @@ document.addEventListener("DOMContentLoaded", () => {
         // Distant Island
         let distantIslandDiffuse = new THREE.TextureLoader().load("distant_island_diffuse.png");
         distantIslandDiffuse.flipY = false;
-        objects[69].material = new THREE.MeshLambertMaterial({
+        objects[68].material = new THREE.MeshLambertMaterial({
             map: distantIslandDiffuse
         });
 
@@ -536,24 +534,32 @@ document.addEventListener("DOMContentLoaded", () => {
         distantTreesDiffuse.flipY = false;
         let distantTreesAlpha = new THREE.TextureLoader().load("distant_trees_alpha.jpg");
         distantTreesAlpha.flipY = false;
-        let distantTreesLightmap = new THREE.TextureLoader().load("tree_lightmap.jpg");
+        let distantTreesLightmap = new THREE.TextureLoader().load("distant_tree_lightmap.jpg");
         distantTreesLightmap.flipY = false;
-        let distantTreesUVArr = objects[70].geometry.getAttribute("uv").array;
-        objects[70].geometry.setAttribute('uv2', new THREE.BufferAttribute( distantTreesUVArr, 2 ));
-        objects[70].material = new THREE.MeshLambertMaterial({
+        let distantTreesUVArr = objects[69].geometry.getAttribute("uv").array;
+        objects[69].geometry.setAttribute('uv2', new THREE.BufferAttribute( distantTreesUVArr, 2 ));
+        objects[69].material = new THREE.MeshLambertMaterial({
             alphaMap: distantTreesAlpha,
             map: distantTreesDiffuse,
             lightMap: distantTreesLightmap,
             lightMapIntensity: 0.9,
             transparent: true
         });
-        objects[70].renderOrder = 1;
+        objects[69].renderOrder = 1;
 
         // Lighthouse
         let lighthouseDiffuse = new THREE.TextureLoader().load("lighthouse_diffuse.png");
         lighthouseDiffuse.flipY = false;
-        objects[71].material = new THREE.MeshLambertMaterial({
+        objects[70].material = new THREE.MeshLambertMaterial({
             map: lighthouseDiffuse
+        });
+
+        // Map
+        let mapDiffuse = new THREE.TextureLoader().load("map_diffuse.jpg");
+        mapDiffuse.flipY = false;
+        objects[71].material = new THREE.MeshLambertMaterial({
+            map: mapDiffuse,
+            side: THREE.DoubleSide
         });
 
         // Add all objects to the scene.
@@ -643,7 +649,7 @@ document.addEventListener("DOMContentLoaded", () => {
         //backdrop.material.uniforms.time.value = time;
 
         updateCubes(clouds, balls, time);
-        rockTheBoat(objects[12], time);
+        rockTheBoat(objects[11], time);
 
         // display that the user is hovering over a skill island
         let intersections = getMouseRayIntersections();
@@ -651,37 +657,37 @@ document.addEventListener("DOMContentLoaded", () => {
             switch ((intersections[0].object.name).toString()) {
                 case "Contributions":
                     //console.log("Contributions Hovered");
-                    drawnCircle.position.set(0, 1.94, -1.75);
+                    drawnCircle.position.set(-0.02, 1.932, -1.75);
                     drawnCircle.scale.set(2.1, 2.1);
                     break;
                 case "Chrome Extensions":
                     //console.log("Chrome Extensions Hovered");
-                    drawnCircle.position.set(0.23, 1.94, -1.78);
+                    drawnCircle.position.set(0.21, 1.932, -1.79);
                     drawnCircle.scale.set(2, 2);
                     break;
                 case "Eye Candy":
                     //console.log("Eye Candy Hovered");
-                    drawnCircle.position.set(0.15, 1.94, -1.5);
+                    drawnCircle.position.set(0.13, 1.932, -1.51);
                     drawnCircle.scale.set(2, 2);
                     break;
                 case "Technologies":
                     //console.log("Technologies Hovered");
-                    drawnCircle.position.set(0.47, 1.94, -1.3);
+                    drawnCircle.position.set(0.47, 1.932, -1.33);
                     drawnCircle.scale.set(3, 3);
                     break;
                 case "Duda Widgets":
                     //console.log("Duda Widgets Hovered");
-                    drawnCircle.position.set(-0.28, 1.94, -1.95);
+                    drawnCircle.position.set(-0.3, 1.932, -1.94);
                     drawnCircle.scale.set(3, 3);
                     break;
                 case "Games":
                     //console.log("Games Hovered");
-                    drawnCircle.position.set(-0.56, 1.94, -1.8);
+                    drawnCircle.position.set(-0.575, 1.932, -1.79);
                     drawnCircle.scale.set(2, 2);
                     break;
                 case "Websites":
                     //console.log("Websites Hovered");
-                    drawnCircle.position.set(-0.66, 1.94, -2.12);
+                    drawnCircle.position.set(-0.66, 1.932, -2.12);
                     drawnCircle.scale.set(4, 4);
                     break;
                 case "Drawn Circle":
@@ -856,7 +862,7 @@ document.addEventListener("DOMContentLoaded", () => {
         if (ship) {
             ship.rotation.x = Math.sin(time) * 0.06;
             ship.rotation.y = (Math.cos(time) * 0.04);
-            ship.position.y = (Math.cos(time) * 0.0025) + 2.083;
+            ship.position.y = (Math.cos(time) * 0.0025) + 2.055;
         }
     }
 
