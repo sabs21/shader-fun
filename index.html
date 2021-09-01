@@ -35,7 +35,7 @@
         <ul>
             <li class="function">
                 <h3>Rectangle</h3>
-                <code>float rect(vec2 st, vec2 bottomLeft, vec2 topRight, vec2 offset, float blur) {
+                <code>float rect(vec2 st, vec2 bottomLeft, vec2 topRight, float blur) {
     float rect = smoothstep(bottomLeft.x, bottomLeft.x+blur, st.x);
     rect *= smoothstep(bottomLeft.y, bottomLeft.y+blur, st.y);
     rect *= smoothstep(topRight.x+blur, topRight.x, st.x);

@@ -3,6 +3,7 @@ import { OrbitControls } from './examples/jsm/controls/OrbitControls.js';
 //import { Water } from './examples/jsm/objects/Water.js';
 import { Water2 } from './examples/jsm/objects/Water2.js';
 import { Water3 } from './examples/jsm/objects/Water3.js';
+import { LanternFlame } from './examples/jsm/objects/LanternFlame.js';
 import { GLTFLoader } from './examples/jsm/loaders/GLTFLoader.js';
 import { MarchingCubes } from './examples/jsm/objects/MarchingCubes.js';
 import { Sky } from './examples/jsm/objects/Sky.js';
@@ -371,7 +372,7 @@ document.addEventListener("DOMContentLoaded", () => {
             specular: 0xffffff,
             transparent: true
         });
-        objects[9].renderOrder = 2;
+        objects[9].renderOrder = 5;
 
         // Holder
         let holderDiffuse = new THREE.TextureLoader().load("wood_texture.jpg");
@@ -447,7 +448,7 @@ document.addEventListener("DOMContentLoaded", () => {
             lightMapIntensity: 1,
             transparent: true
         });
-        objects[63].renderOrder = 3;
+        objects[63].renderOrder = 2;
 
         // Plants Front
         let frontGrassDiffuse = new THREE.TextureLoader().load("grass_diffuse.jpg");
@@ -465,7 +466,7 @@ document.addEventListener("DOMContentLoaded", () => {
             lightMapIntensity: 1,
             transparent: true
         });
-        objects[64].renderOrder = 4;
+        objects[64].renderOrder = 3;
 
         // Tree_1
         let frontTreeDiffuse = new THREE.TextureLoader().load("tree_diffuse.jpg");
@@ -483,7 +484,7 @@ document.addEventListener("DOMContentLoaded", () => {
             lightMapIntensity: 1,
             transparent: true
         });
-        objects[65].renderOrder = 2;
+        objects[65].renderOrder = 1;
 
         // Tree_2
         let backTreeDiffuse = new THREE.TextureLoader().load("tree2_diffuse.jpg");
@@ -501,7 +502,7 @@ document.addEventListener("DOMContentLoaded", () => {
             lightMapIntensity: 0.9,
             transparent: true
         });
-        objects[66].renderOrder = 1;
+        objects[66].renderOrder = 0;
 
         // Dock
         let dockDiffuse = new THREE.TextureLoader().load("dock_diffuse.jpg");
@@ -562,6 +563,10 @@ document.addEventListener("DOMContentLoaded", () => {
             map: mapDiffuse,
             side: THREE.DoubleSide
         });
+
+        // Lantern Flame
+        objects[72] = new LanternFlame(objects[72].geometry);
+        objects[72].renderOrder = 4;
 
         // Add all objects to the scene.
         objects.forEach(object => scene.add(object));
