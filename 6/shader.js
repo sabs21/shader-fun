@@ -120,6 +120,19 @@ document.addEventListener("DOMContentLoaded", () => {
         scene.add(ambientLight);
     }
 
+    // Lamp lighting
+    {
+        const color = 0xff9a02;
+        const intensity = 2;
+        const lampLight = new THREE.PointLight( color, intensity, 2 );
+        lampLight.position.set( -1.25, 2.13, -1.77 );
+        scene.add( lampLight );
+
+        /*const sphereSize = 0.1;
+        const pointLightHelper = new THREE.PointLightHelper( lampLight, sphereSize );
+        scene.add( pointLightHelper );*/
+    }
+
     {
         // Water in the bottle
         const width = 1.9;
