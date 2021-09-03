@@ -116,7 +116,7 @@ LanternFlame.FlameShader = {
             vec3 yellow = vec3(1.0, 0.85, 0.0);
             vec3 orange = vec3(1.0, 0.4, 0.0);
             
-            float aspect = 0.315;
+            float aspect = 0.310;
             float value = sqrt(0.1 - pow(uv.x*aspect, 2.0)) - 0.25;
             value += gnoise(uv.x/1.5+(time/3.0))/6.0;
             value += gnoise(uv.x/1.5+time)/4.0;
