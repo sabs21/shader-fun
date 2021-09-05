@@ -139,3 +139,24 @@ b > .inline_code {
 .invisible {
   opacity: 0;
 }
+#shipWheel {
+  position: absolute;
+  display: block;
+  width: 500px;
+  height: 500px;
+  background: #ffffff;
+  -webkit-mask-image: url("./6/ship_wheel.svg");
+  mask-image: url("./6/ship_wheel.svg");
+  -webkit-mask-size: contain;
+  mask-size: contain;
+  animation: 6s linear infinite spinner;
+}
+
+@keyframes spinner {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}

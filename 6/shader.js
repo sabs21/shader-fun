@@ -16,6 +16,7 @@ document.addEventListener("DOMContentLoaded", () => {
     const sunsetUI = document.getElementById("sunsetUI");
     const viewSunsetButton = document.getElementById("viewSunset");
     const mapUI = document.getElementById("mapUI");
+    const shipWheelElem = document.getElementById("shipWheel");
 
     // Three.JS Globals
     const balls = [];
@@ -41,8 +42,8 @@ document.addEventListener("DOMContentLoaded", () => {
     let lookAtDirector = null;
 
     // Establish the loadingUI to display the load progress.
-    let loadingCanvas = document.getElementById('loadingBar');
-    let draw = loadingCanvas.getContext('2d');
+    //let loadingCanvas = document.getElementById('loadingBar');
+    //let draw = loadingCanvas.getContext('2d');
 
     // Setup the loading manager such that the loading bar can reflect the total progress of the scene.
     // The onLoad event of the default loading manager fires twice, so we can't rely on that event to signify when everything's loaded.
@@ -51,9 +52,10 @@ document.addEventListener("DOMContentLoaded", () => {
     THREE.DefaultLoadingManager.onProgress = function (url, itemsLoaded, itemsTotal) {
         //console.log( 'Loading file: ' + url + '.\nLoaded ' + itemsLoaded + ' of ' + itemsTotal + ' files.' );
         loaded++;
-        drawProgress(draw, loaded/totalToLoad);
+        shipWheelElem.setAttribute("totalLoaded", (loaded/totalToLoad)*100); // Display loading progress
+        //drawProgress(draw, loaded/totalToLoad);
     };
-    THREE.DefaultLoadingManager.onLoad = function ( ) {
+    /*THREE.DefaultLoadingManager.onLoad = function ( ) {
         // This gets fired twice, so we must check to see if everything actually loaded.
         if (loaded === totalToLoad) {
             console.log( 'Loading Complete!');
@@ -66,7 +68,7 @@ document.addEventListener("DOMContentLoaded", () => {
                 mapUI.classList.remove("invisible");
             }, 1000);
         }
-    };
+    };*/
 
     // First fade the loadingUI out, then begin to fade the sunsetUI in.
 
@@ -819,7 +821,7 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     // Progress must be normalized between 0 and 1.
-    function drawProgress(ctx, progress) {
+    /*function drawProgress(ctx, progress) {
         let startingAngle = 270;
         draw.beginPath();
         draw.lineWidth = 10;
@@ -833,7 +835,7 @@ document.addEventListener("DOMContentLoaded", () => {
                 false);
         draw.stroke();
         draw.closePath();
-    }
+    }*/
 
     function generateUV2(geometry) {
         let UVArr = geometry.getAttribute("uv").array;
