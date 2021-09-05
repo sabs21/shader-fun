@@ -41,10 +41,6 @@ document.addEventListener("DOMContentLoaded", () => {
     let positionDirector = null;
     let lookAtDirector = null;
 
-    // Establish the loadingUI to display the load progress.
-    //let loadingCanvas = document.getElementById('loadingBar');
-    //let draw = loadingCanvas.getContext('2d');
-
     // Setup the loading manager such that the loading bar can reflect the total progress of the scene.
     // The onLoad event of the default loading manager fires twice, so we can't rely on that event to signify when everything's loaded.
     let loaded = 0;
@@ -55,22 +51,6 @@ document.addEventListener("DOMContentLoaded", () => {
         shipWheelElem.setAttribute("totalLoaded", (loaded/totalToLoad)*100); // Display loading progress
         //drawProgress(draw, loaded/totalToLoad);
     };
-    /*THREE.DefaultLoadingManager.onLoad = function ( ) {
-        // This gets fired twice, so we must check to see if everything actually loaded.
-        if (loaded === totalToLoad) {
-            console.log( 'Loading Complete!');
-            // When the scene is loaded, fade the loading bar out and display the scene.
-            let loadingUI = document.getElementById("loadingUI");
-            loadingUI.classList.add("invisible");
-            setTimeout(() => {
-                loadingUI.classList.add("hidden");
-                sunsetUI.classList.remove("invisible");
-                mapUI.classList.remove("invisible");
-            }, 1000);
-        }
-    };*/
-
-    // First fade the loadingUI out, then begin to fade the sunsetUI in.
 
     // Stretch to fit height of screen
     threeDisplay.style.height = screenDimensions.height + "px";
@@ -156,7 +136,6 @@ document.addEventListener("DOMContentLoaded", () => {
         bottleWater.scale.set(0.1, 0.1, 0.1);
         bottleWater.renderOrder = 1; // allows the water to be visible through the bottle
         objects.push(bottleWater);
-        //scene.add(bottleWater);
     }
 
     {
@@ -819,23 +798,6 @@ document.addEventListener("DOMContentLoaded", () => {
 
         return material;
     }
-
-    // Progress must be normalized between 0 and 1.
-    /*function drawProgress(ctx, progress) {
-        let startingAngle = 270;
-        draw.beginPath();
-        draw.lineWidth = 10;
-        draw.lineCap = "round";
-        draw.strokeStyle = "#ffffff";
-        draw.arc(300, 
-                300, 
-                280, 
-                THREE.Math.degToRad(startingAngle), 
-                THREE.Math.degToRad(startingAngle + progress*360), 
-                false);
-        draw.stroke();
-        draw.closePath();
-    }*/
 
     function generateUV2(geometry) {
         let UVArr = geometry.getAttribute("uv").array;
