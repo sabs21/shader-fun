@@ -127,14 +127,7 @@ b > .inline_code {
 #loadingUI {
   background-color: #333333;
   align-items: center;
-}
-#loadingBar {
-  position: absolute;
-  border-radius: 50%;
   overflow: hidden;
-  width: 16em;
-  height: 16em;
-  background: none;
 }
 .invisible {
   opacity: 0;
@@ -142,8 +135,8 @@ b > .inline_code {
 #shipWheel {
   position: absolute;
   display: block;
-  width: 500px;
-  height: 500px;
+  width: 350px;
+  height: 350px;
   background: #ffffff;
   -webkit-mask-image: url("./6/ship_wheel.svg");
   mask-image: url("./6/ship_wheel.svg");

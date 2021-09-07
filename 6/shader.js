@@ -273,7 +273,7 @@ document.addEventListener("DOMContentLoaded", () => {
     objects.push(skyCloud4);
 
     // Load the scene and its objects
-    loadScene("./scene2.glb")
+    loadScene("./scene.glb")
     .then((sceneObjects) => {
         // Merge both object arrays into one using the spread operator.
         objects = [...objects, ...sceneObjects];
