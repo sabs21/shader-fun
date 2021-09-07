@@ -144,6 +144,61 @@ b > .inline_code {
   mask-size: contain;
   animation: 6s linear infinite spinner;
 }
+.innerFrame {
+  position: absolute;
+  display: block;
+  top: 0.25em;
+  left: 0.25em;
+  bottom: 0.25em;
+  right: 0.25em;
+  border: 1px solid white;
+}
+.outerFrame {
+  position: absolute;
+  display: block;
+  top: 2em;
+  left: 2em;
+  bottom: 2em;
+  right: 2em;
+  border: 2px solid white;
+}
+.newButton {
+  position: relative;
+  display: flex;
+  flex-direction: row;
+  justify-content: center;
+  align-items: center;
+  width: 100px;
+  height: 100px;
+  border-radius: 50px;
+  background-color: white;
+  border: 3px solid rgb(0, 0, 0);
+  cursor: pointer;
+}
+.newButton:hover {
+  background-color: black;
+}
+.newButton:hover svg {
+  fill: white;
+}
+#selectionText {
+  position: absolute;
+  display: block;
+  width: 100%;
+  text-align: center;
+  font-size: 56px;
+  font-weight: bold;
+  color: white;
+  margin: 0px auto;
+  letter-spacing: 50px;
+  top: 0.5em;
+}
+.icon {
+  position: relative;
+  display: block;
+  width: 60%;
+  height: 60%;
+}
 
 @keyframes spinner {
   from {

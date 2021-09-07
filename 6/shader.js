@@ -44,7 +44,7 @@ document.addEventListener("DOMContentLoaded", () => {
     // Setup the loading manager such that the loading bar can reflect the total progress of the scene.
     // The onLoad event of the default loading manager fires twice, so we can't rely on that event to signify when everything's loaded.
     let loaded = 0;
-    let totalToLoad = 43; 
+    let totalToLoad = 46; 
     THREE.DefaultLoadingManager.onProgress = function (url, itemsLoaded, itemsTotal) {
         //console.log( 'Loading file: ' + url + '.\nLoaded ' + itemsLoaded + ' of ' + itemsTotal + ' files.' );
         loaded++;
@@ -669,8 +669,8 @@ document.addEventListener("DOMContentLoaded", () => {
         // For a smooth pan, take the movement and subtract the 'to' movement with the 'from' movement. Add this number to the 'from' lookAt numbers. 
         // I.e.: lookAtTo = new THREE.Vector3((posTo.x - posFrom.x) + lookAtFrom.x, (posTo.y - posFrom.y) + lookAtFrom.y, (posTo.z - posFrom.z) + lookAtFrom.z)
         lookAtDirector = new CameraDirector();
-        lookAtDirector.addPlan(new CameraPlan(new THREE.Vector3(-0.1, 2, -1.5), new THREE.Vector3(-0.1, 2, -5), 2, 998, true));
-        lookAtDirector.addPlan(new CameraPlan(new THREE.Vector3(-0.1, 2, -5), new THREE.Vector3(-0.1, 2, -1.5), 1.5, 998.5, true));
+        lookAtDirector.addPlan(new CameraPlan(new THREE.Vector3(-0.1, 2, -1.6), new THREE.Vector3(-0.1, 2, -5), 2, 998, true));
+        lookAtDirector.addPlan(new CameraPlan(new THREE.Vector3(-0.1, 2, -5), new THREE.Vector3(-0.1, 2, -1.6), 1.5, 998.5, true));
     }
 
     window.addEventListener('mousemove', updateMouseRay, false );
