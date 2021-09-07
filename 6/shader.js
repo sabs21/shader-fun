@@ -273,7 +273,7 @@ document.addEventListener("DOMContentLoaded", () => {
     objects.push(skyCloud4);
 
     // Load the scene and its objects
-    loadScene("./scene.glb")
+    loadScene("./scene2.glb")
     .then((sceneObjects) => {
         // Merge both object arrays into one using the spread operator.
         objects = [...objects, ...sceneObjects];
@@ -289,10 +289,10 @@ document.addEventListener("DOMContentLoaded", () => {
         // objects[7]:  Left barrel
         // objects[8]:  Bands (Hurricane Lantern)
         // objects[9]:  Base (Hurricane Lantern)
-        // objects[10]:  Bottle (Ship in a Bottle)
-        // objects[11]:  Pin
-        // objects[12]:  Cork (Ship in a Bottle)
-        // objects[13]:  Glass (Hurricane Lantern)
+        // objects[10]: Bottle (Ship in a Bottle)
+        // objects[11]: Pin
+        // objects[12]: Cork (Ship in a Bottle)
+        // objects[13]: Glass (Hurricane Lantern)
         // objects[14]: Holder (Ship in a Bottle)
         // objects[15]: Ship (Ship in a Bottle)
         // objects[16]: Tabletop
@@ -315,6 +315,7 @@ document.addEventListener("DOMContentLoaded", () => {
         // objects[74]: Lighthouse
         // objects[75]: Map
         // objects[76]: Lantern Flame
+        // objects[77]: Inner_Glass (Hurricane Lantern)
 
         // Bottle Cube Camera
         // Create cube render target. This holds the environment map texture that the CubeCamera generates.
@@ -412,7 +413,7 @@ document.addEventListener("DOMContentLoaded", () => {
             specular: 0xffffff,
             transparent: true
         });
-        objects[13].renderOrder = 5;
+        objects[13].renderOrder = 6;
 
         // Holder
         let holderDiffuse = new THREE.TextureLoader().load("wood_texture.jpg");
@@ -606,6 +607,25 @@ document.addEventListener("DOMContentLoaded", () => {
         // Lantern Flame
         objects[76] = new LanternFlame(objects[76].geometry);
         objects[76].renderOrder = 4;
+
+        // Inner Glass (hurricane lantern)
+        let sootDiffuse = new THREE.TextureLoader().load("soot_diffuse.jpg");
+        sootDiffuse.flipY = false;
+        let sootAlpha = new THREE.TextureLoader().load("soot_alpha.jpg");
+        sootAlpha.flipY = false;
+        let sootEmissive = new THREE.TextureLoader().load("soot_emissive.jpg");
+        sootEmissive.flipY = false;
+        objects[77].material = new THREE.MeshLambertMaterial({ 
+            map: sootDiffuse,
+            alphaMap: sootAlpha,
+            emissive: 0xcd2a0a,
+            emissiveMap: sootEmissive,
+            //lightMap: sootEmissive,
+            //lightMapIntensity: 10,
+            //emissiveIntensity: 100.25,
+            transparent: true
+        });
+        objects[77].renderOrder = 5;
 
         // Add all objects to the scene.
         objects.forEach(object => scene.add(object));
