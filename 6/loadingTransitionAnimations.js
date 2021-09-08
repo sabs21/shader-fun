@@ -41,20 +41,23 @@
         shipWheelElem.classList.add("hidden");
     }, 600);
 
-    for (let i = 0; i < navButtons.length; i++) {
+    // Play the buttonPresence animation on the skeleton buttons on load.
+    for (let i = 0; i < skeletonButtons.length; i++) {
         window.setTimeout(() => {
-            // Play this animation on hover
-            navButtons[i].addEventListener("mouseenter", () => {
-                attentionAuras[i].style = auraAnimationStyle;
-            });
-            navButtons[i].addEventListener("mouseleave", () => {
-                attentionAuras[i].style = "";
-            });
-
-            // Play these animations on load
+            // Play these skeleton animations on load
             skeletonButtons[i].style = buttonAnimationStyle;
             skeletonAuras[i].style = skeletonAuraAnimationStyle;
         }, delay * i);
+    }
+
+    // Play the buttonPresence animation just once on each navButton hover. 
+    for (let i = 0; i < navButtons.length; i++) {
+        navButtons[i].addEventListener("mouseenter", () => {
+            attentionAuras[i].style = auraAnimationStyle;
+        });
+        navButtons[i].addEventListener("mouseleave", () => {
+            attentionAuras[i].style = "";
+        });
     }
 
     // Duration of both inner and outer animations
@@ -71,7 +74,6 @@
         if (previousTimeStamp !== timestamp) {
             drawProgress(outerDraw, elapsed/animationDuration);
             drawProgress(innerDraw, elapsed/animationDuration);
-            console.log("elapsed/animationDuration", elapsed/animationDuration);
         }
 
         if (elapsed < animationDuration) { // Stop the animation after 1.5 seconds
@@ -116,7 +118,7 @@
         draw.beginPath();
         draw.lineWidth = 800;
         //draw.lineCap = "round";
-        draw.strokeStyle = "#ff0000";
+        draw.strokeStyle = "#ffffff";
         draw.arc(0, 
                 0, 
                 500, 
