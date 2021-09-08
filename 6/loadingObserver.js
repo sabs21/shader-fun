@@ -13,12 +13,12 @@ document.addEventListener("DOMContentLoaded", () => {
     // Callback function to execute when mutations are observed
     const callback = function(mutationsList, observer) {
         for(const mutation of mutationsList) {
-            console.log(parseInt(shipWheelElem.getAttribute("totalLoaded")));
+            //console.log(parseInt(shipWheelElem.getAttribute("totalLoaded")));
             if (parseInt(shipWheelElem.getAttribute("totalLoaded")) != totalLoaded) {
                 totalLoaded = parseInt(shipWheelElem.getAttribute("totalLoaded"));
                 // Expand the gradient to display that the scene is loading
                 shipWheelElem.style = "background: radial-gradient(#fc8c03 " + totalLoaded + "%, #ffffff " + (totalLoaded*2) + "%);";
-                console.log("radial-gradient(#e66465 " + totalLoaded + "%, #9198e5 " + (totalLoaded*2) + "%);");
+                //console.log("radial-gradient(#e66465 " + totalLoaded + "%, #9198e5 " + (totalLoaded*2) + "%);");
             }
             if (totalLoaded === 100) {
                 // Stop observing, the scene is loaded

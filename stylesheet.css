@@ -249,6 +249,10 @@ b > .inline_code {
   border: 3px solid rgb(0, 0, 0);
   z-index: 2;
 }
+.skeletonButton {
+  opacity: 0;
+  background-color: lightgrey;
+}
 .navButton {
   opacity: 1;
   width: 100px;
@@ -257,15 +261,15 @@ b > .inline_code {
   border: 3px solid rgb(0, 0, 0);
   cursor: pointer;
 }
-.skeletonButton {
-  opacity: 0;
-  background-color: lightgrey;
-}
 .navButton:hover {
   background-color: black;
 }
 .navButton:hover svg {
   fill: white;
+}
+.navButton:hover ~ .selectionText {
+  opacity: 1;
+  letter-spacing: 40px;
 }
 .navButton:hover ~ .attentionAura {
   animation: 1s ease-in infinite normal running buttonPresence;
@@ -306,6 +310,10 @@ b > .inline_code {
   transition: letter-spacing 1s ease, opacity 200ms ease;
   opacity: 0;
   z-index: 1;
+}
+.selectionText.active {
+  opacity: 1;
+  letter-spacing: 40px;
 }
 .icon {
   position: relative;
