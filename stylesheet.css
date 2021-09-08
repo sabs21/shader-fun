@@ -174,12 +174,18 @@ b > .inline_code {
   background-color: white;
   border: 3px solid rgb(0, 0, 0);
   cursor: pointer;
+  margin: 2em;
+  z-index: 2;
 }
 .newButton:hover {
   background-color: black;
 }
 .newButton:hover svg {
   fill: white;
+}
+.newButton:hover ~ #selectionText {
+  opacity: 1;
+  letter-spacing: 56px;
 }
 #selectionText {
   position: absolute;
@@ -190,8 +196,11 @@ b > .inline_code {
   font-weight: bold;
   color: white;
   margin: 0px auto;
-  letter-spacing: 50px;
+  letter-spacing: 5px;
   top: 0.5em;
+  transition: letter-spacing 1s ease, opacity 200ms ease;
+  opacity: 0;
+  z-index: 1;
 }
 .icon {
   position: relative;
@@ -208,3 +217,12 @@ b > .inline_code {
     transform: rotate(360deg);
   }
 }
+
+/*@keyframes flexibleLettering {
+  from {
+    letter-spacing: 56px;
+  }
+  to {
+    letter-spacing: 5px;
+  }
+}*/
