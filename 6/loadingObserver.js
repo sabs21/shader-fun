@@ -12,7 +12,6 @@ document.addEventListener("DOMContentLoaded", () => {
 
     // Callback function to execute when mutations are observed
     const callback = function(mutationsList, observer) {
-        // Use traditional 'for loops' for IE 11
         for(const mutation of mutationsList) {
             console.log(parseInt(shipWheelElem.getAttribute("totalLoaded")));
             if (parseInt(shipWheelElem.getAttribute("totalLoaded")) != totalLoaded) {
@@ -25,13 +24,14 @@ document.addEventListener("DOMContentLoaded", () => {
                 // Stop observing, the scene is loaded
                 observer.disconnect();
 
+                addLoadingTransitionAnimationScript();
                 // When the scene is loaded, fade the loading bar out and display the scene.
-                loadingUI.classList.add("invisible");
+                /*loadingUI.classList.add("invisible");
                 setTimeout(() => {
                     loadingUI.classList.add("hidden");
-                    sunsetUI.classList.remove("invisible");
-                    mapUI.classList.remove("invisible");
-                }, 2000);
+                    //sunsetUI.classList.remove("invisible");
+                    //mapUI.classList.remove("invisible");
+                }, 2000);*/
             }
         }
     };
@@ -42,3 +42,10 @@ document.addEventListener("DOMContentLoaded", () => {
     // Start observing the target node for configured mutations
     observer.observe(shipWheel, config);
 });
+
+function addLoadingTransitionAnimationScript() {
+    let body = document.getElementsByTagName("body")[0];
+    let script = document.createElement("script");
+    script.setAttribute("src", "./loadingTransitionAnimations.js");
+    body.append(script);
+}

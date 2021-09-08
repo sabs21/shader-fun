@@ -1,3 +1,6 @@
+:root {
+  --loading-bg-color: rgb(49, 49, 49);
+}
 * {
   padding: 0px;
   margin: 0px;
@@ -143,6 +146,7 @@ b > .inline_code {
   -webkit-mask-size: contain;
   mask-size: contain;
   animation: 6s linear infinite spinner;
+  transition: opacity 500ms ease;
 }
 .innerFrame {
   position: absolute;
@@ -160,9 +164,52 @@ b > .inline_code {
   left: 2em;
   bottom: 2em;
   right: 2em;
-  border: 2px solid white;
+  border: 3px solid white;
 }
-.newButton {
+#loadingOuterFrame {
+  position: absolute;
+  display: block;
+  top: calc(2em + 3px);
+  left: calc(2em + 3px);
+  bottom: calc(2em + 3px);
+  right: calc(2em + 3px);
+  background-color: var(--loading-bg-color);
+}
+#loadingOuterFrameBacking {
+  position: absolute;
+  display: block;
+  top: 2em;
+  left: 2em;
+  bottom: 2em;
+  right: 2em;
+  width: auto;
+  height: auto;
+  background-color: transparent;
+}
+#loadingInnerFrame {
+  position: absolute;
+  display: flex;
+  flex-direction: row;
+  justify-content: center;
+  align-items: center;
+  top: calc(0.25em + 1px);
+  left: calc(0.25em + 1px);
+  bottom: calc(0.25em + 1px);
+  right: calc(0.25em + 1px);
+  background-color: var(--loading-bg-color);
+}
+#loadingInnerFrameBacking {
+  position: absolute;
+  display: block;
+  top: 0.25em;
+  left: 0.25em;
+  bottom: 0.25em;
+  right: 0.25em;
+  width: auto;
+  height: auto;
+  background-color: transparent;
+}
+/*.navButton {
   position: relative;
   display: flex;
   flex-direction: row;
@@ -174,18 +221,73 @@ b > .inline_code {
   background-color: white;
   border: 3px solid rgb(0, 0, 0);
   cursor: pointer;
-  margin: 2em;
+  margin: 1em 1em 1em 2em;
   z-index: 2;
 }
-.newButton:hover {
+.navButton:first-child {
+  margin: 2em 1em 1em 2em;
+}
+.navButton:hover {
   background-color: black;
 }
-.newButton:hover svg {
+.navButton:hover svg {
   fill: white;
 }
-.newButton:hover ~ .selectionText {
+.navButton:hover ~ .selectionText {
   opacity: 1;
   letter-spacing: 40px;
+}*/
+.navButton, .skeletonButton {
+  position: relative;
+  display: flex;
+  flex-direction: row;
+  justify-content: center;
+  align-items: center;
+  border-radius: 50%;
+  background-color: white;
+  border: 3px solid rgb(0, 0, 0);
+  z-index: 2;
+}
+.navButton {
+  opacity: 1;
+  width: 100px;
+  height: 100px;
+  background-color: white;
+  border: 3px solid rgb(0, 0, 0);
+  cursor: pointer;
+}
+.skeletonButton {
+  opacity: 0;
+  background-color: lightgrey;
+}
+.navButton:hover {
+  background-color: black;
+}
+.navButton:hover svg {
+  fill: white;
+}
+.navButton:hover ~ .attentionAura {
+  animation: 1s ease-in infinite normal running buttonPresence;
+  animation-fill-mode: backwards;
+}
+.attentionAura, .skeletonAura {
+  position: absolute;
+  display: block;
+  border-radius: 50%;
+  background-color: white;
+  width: 0px;
+  height: 0px;
+  z-index: 1;
+}
+.attentionButton {
+  position: relative;
+  display: flex;
+  flex-direction: row;
+  justify-content: center;
+  align-items: center;
+  width: 120px;
+  height: 120px;
+  /*margin: 1em 1em 1em 2em;*/
 }
 .selectionText {
   position: absolute;
@@ -198,6 +300,7 @@ b > .inline_code {
   margin: 0px auto;
   letter-spacing: 5px;
   top: 0.5em;
+  text-shadow: 0px 0px 6px #000000;
   transition: letter-spacing 1s ease, opacity 200ms ease;
   opacity: 0;
   z-index: 1;
@@ -207,6 +310,17 @@ b > .inline_code {
   display: block;
   width: 60%;
   height: 60%;
+}
+.sideButtons {
+  position: absolute;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  height: 100%;
+  top: 0px;
+  left: 0px;
+  margin-left: 2em;
 }
 
 @keyframes spinner {
@@ -218,11 +332,56 @@ b > .inline_code {
   }
 }
 
-/*@keyframes flexibleLettering {
+@keyframes buttonPresence {
   from {
-    letter-spacing: 56px;
+    width: 99px;
+    height: 99px;
+    opacity: 0.8;
   }
   to {
-    letter-spacing: 5px;
+    width: 250px;
+    height: 250px;
+    opacity: 0;
   }
-}*/
+}
+
+@keyframes skeletonButtonPresence {
+  from {
+    width: 0px;
+    height: 0px;
+    opacity: 0.8;
+  }
+  to {
+    width: 250px;
+    height: 250px;
+    opacity: 0;
+  }
+}
+
+@keyframes bouncy {
+  0% {
+    width: 0px;
+    height: 0px;
+    opacity: 1;
+  }
+  60% {
+    width: 120px;
+    height: 120px;
+    opacity: 1;
+  }
+  80% {
+    width: 90px;
+    height: 90px;
+    opacity: 1;
+  }
+  90% {
+    width: 104px;
+    height: 104px;
+    opacity: 1;
+  }
+  100% {
+    width: 100px;
+    height: 100px;
+    opacity: 1;
+  }
+}
