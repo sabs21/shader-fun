@@ -183,11 +183,11 @@ b > .inline_code {
 .newButton:hover svg {
   fill: white;
 }
-.newButton:hover ~ #selectionText {
+.newButton:hover ~ .selectionText {
   opacity: 1;
-  letter-spacing: 56px;
+  letter-spacing: 40px;
 }
-#selectionText {
+.selectionText {
   position: absolute;
   display: block;
   width: 100%;
