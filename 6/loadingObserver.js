@@ -1,8 +1,4 @@
 document.addEventListener("DOMContentLoaded", () => {
-    const loadingUI = document.getElementById("loadingUI");
-    const sunsetUI = document.getElementById("sunsetUI");
-    const mapUI = document.getElementById("mapUI");
-
     // Select the node that will be observed for mutations
     const shipWheelElem = document.getElementById('shipWheel');
     let totalLoaded = 0;
@@ -25,13 +21,6 @@ document.addEventListener("DOMContentLoaded", () => {
                 observer.disconnect();
 
                 addLoadingTransitionAnimationScript();
-                // When the scene is loaded, fade the loading bar out and display the scene.
-                /*loadingUI.classList.add("invisible");
-                setTimeout(() => {
-                    loadingUI.classList.add("hidden");
-                    //sunsetUI.classList.remove("invisible");
-                    //mapUI.classList.remove("invisible");
-                }, 2000);*/
             }
         }
     };
