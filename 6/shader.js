@@ -20,7 +20,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
     // Three.JS Globals
     const balls = [];
-    const isOrbitCameraOn = false;
+    const isOrbitCameraOn = true;
     const lightMapIntensity = 1;
     const skySettings = {
         turbidity: 10,
@@ -96,7 +96,7 @@ document.addEventListener("DOMContentLoaded", () => {
         const sunlight = new THREE.DirectionalLight(color, intensity);
         sunlight.position.set(0, 4, -10);
         sunlight.target.position.set(0, 0, 0);
-        scene.add(sunlight);
+        //scene.add(sunlight);
 
         const ambientLight = new THREE.AmbientLight(0xffffff, 0.02);
         scene.add(ambientLight);
@@ -434,7 +434,6 @@ document.addEventListener("DOMContentLoaded", () => {
             lightMap: shipLightmap,
             lightMapIntensity: lightMapIntensity,
         });
-        //objects[11].position.set(0.69, 2.023, -1.71)
 
         // Table top
         let tableDiffuse = new THREE.TextureLoader().load("wood_texture.jpg"); // TODO: Should reuse holderDiffuse, but cloning is not working. Re-loading the texture for now.
@@ -556,8 +555,12 @@ document.addEventListener("DOMContentLoaded", () => {
         dockSpecular.wrapS = THREE.RepeatWrapping;
         dockSpecular.wrapT = THREE.RepeatWrapping;
         dockSpecular.repeat.set( 12, 6 );
+        let dockLightmap = new THREE.TextureLoader().load("dock_lightmap.png");
+        dockLightmap.flipY = false;
         objects[71].material = new THREE.MeshPhongMaterial({
             map: dockDiffuse,
+            lightMap: dockLightmap,
+            lightMapIntensity: 2,
             specular: 0xff8133,
             specularMap: dockSpecular,
             reflectivity: 0.5,

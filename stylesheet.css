@@ -209,34 +209,6 @@ b > .inline_code {
   height: auto;
   background-color: transparent;
 }
-/*.navButton {
-  position: relative;
-  display: flex;
-  flex-direction: row;
-  justify-content: center;
-  align-items: center;
-  width: 100px;
-  height: 100px;
-  border-radius: 50px;
-  background-color: white;
-  border: 3px solid rgb(0, 0, 0);
-  cursor: pointer;
-  margin: 1em 1em 1em 2em;
-  z-index: 2;
-}
-.navButton:first-child {
-  margin: 2em 1em 1em 2em;
-}
-.navButton:hover {
-  background-color: black;
-}
-.navButton:hover svg {
-  fill: white;
-}
-.navButton:hover ~ .selectionText {
-  opacity: 1;
-  letter-spacing: 40px;
-}*/
 .navButton,
 .skeletonButton {
   position: relative;
