@@ -214,9 +214,9 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     // Add drawn circle sprite
-    let drawnCircleDiffuse = textureLoader.load("circle.png");
+    let drawnCircleDiffuse = textureLoader.load("./textures/diffuse/circle.png");
     drawnCircleDiffuse.flipY = false;
-    let drawnCircleAlpha = textureLoader.load("circle_alpha.png");
+    let drawnCircleAlpha = textureLoader.load("./textures/alpha/circle_alpha.png");
     drawnCircleAlpha.flipY = false;
     let drawnCircleGeometry = new THREE.PlaneGeometry(0.1, 0.1, 1, 1);
     let drawnCircleMaterial = new THREE.MeshBasicMaterial({
@@ -249,25 +249,25 @@ document.addEventListener("DOMContentLoaded", () => {
     scene.add( clouds );
 
     // Sky clouds 1
-    let skyCloud1Diffuse = textureLoader.load("cloud1_diffuse.png");
+    let skyCloud1Diffuse = textureLoader.load("./textures/diffuse/cloud1_diffuse.png");
     let skyCloud1Material = new THREE.SpriteMaterial( { map: skyCloud1Diffuse } );
     let skyCloud1 = new THREE.Sprite( skyCloud1Material );
     objects.push(skyCloud1);
 
     // Sky clouds 2
-    let skyCloud2Diffuse = textureLoader.load("cloud2_diffuse.png");
+    let skyCloud2Diffuse = textureLoader.load("./textures/diffuse/cloud2_diffuse.png");
     let skyCloud2Material = new THREE.SpriteMaterial( { map: skyCloud2Diffuse } );
     let skyCloud2 = new THREE.Sprite( skyCloud2Material );
     objects.push(skyCloud2);
 
     // Sky clouds 3
-    let skyCloud3Diffuse = textureLoader.load("cloud2_diffuse.png");
+    let skyCloud3Diffuse = textureLoader.load("./textures/diffuse/cloud2_diffuse.png");
     let skyCloud3Material = new THREE.SpriteMaterial( { map: skyCloud3Diffuse } );
     let skyCloud3 = new THREE.Sprite( skyCloud3Material );
     objects.push(skyCloud3);
 
     // Sky clouds 4
-    let skyCloud4Diffuse = textureLoader.load("cloud3_diffuse.png");
+    let skyCloud4Diffuse = textureLoader.load("./textures/diffuse/cloud3_diffuse.png");
     let skyCloud4Material = new THREE.SpriteMaterial( { map: skyCloud4Diffuse } );
     let skyCloud4 = new THREE.Sprite( skyCloud4Material );
     objects.push(skyCloud4);
@@ -338,7 +338,6 @@ document.addEventListener("DOMContentLoaded", () => {
 
         // Sky Cloud 1
         objects[2].position.set(-870, 550, -5000);
-        //objects[2].scale.set(400, 80);
         objects[2].scale.set(1800, 650);
 
         // Sky Cloud 2
@@ -354,9 +353,9 @@ document.addEventListener("DOMContentLoaded", () => {
         objects[5].scale.set(3000, 500);
 
         // Right Barrel
-        let barrelDiffuse = textureLoader.load("barrel_diffuse.jpg");
+        let barrelDiffuse = textureLoader.load("./textures/diffuse/barrel_diffuse.jpg");
         barrelDiffuse.flipY = false;
-        let barrelSpecular = textureLoader.load("barrel_specular.png");
+        let barrelSpecular = textureLoader.load("./textures/specular/barrel_specular.png");
         barrelSpecular.flipY = false;
         objects[6].material = new THREE.MeshPhongMaterial({
             map: barrelDiffuse,
@@ -366,7 +365,7 @@ document.addEventListener("DOMContentLoaded", () => {
         });
 
         // Left Barrel
-        let barrelLightmap = textureLoader.load("barrel_lightmap.png");
+        let barrelLightmap = textureLoader.load("./textures/lightmap/barrel_lightmap.png");
         barrelLightmap.flipY = false;
         objects[7].material = new THREE.MeshPhongMaterial({
             map: barrelDiffuse,
@@ -419,7 +418,7 @@ document.addEventListener("DOMContentLoaded", () => {
         objects[11].renderOrder = 6;
 
         // Holder
-        let holderDiffuse = textureLoader.load("wood_texture.jpg");
+        let holderDiffuse = textureLoader.load("./textures/diffuse/wood_diffuse.jpg");
         holderDiffuse.flipY = false;
         objects[12].material = new THREE.MeshLambertMaterial({
             map: holderDiffuse
@@ -427,9 +426,9 @@ document.addEventListener("DOMContentLoaded", () => {
 
         // Ship (Ship in a Bottle)
         objects[13].position.set(0.73, 2.083, -1.7); // Place ship into correct position.
-        let shipDiffuse = textureLoader.load("ship_diffuse.png");
+        let shipDiffuse = textureLoader.load("./textures/diffuse/ship_diffuse.png");
         shipDiffuse.flipY = false;
-        let shipLightmap = textureLoader.load("ship_lightmap.png");
+        let shipLightmap = textureLoader.load("./textures/lightmap/ship_lightmap.png");
         shipLightmap.flipY = false;
         generateUV2(objects[13].geometry);
         objects[13].material = new THREE.MeshLambertMaterial({
@@ -439,12 +438,12 @@ document.addEventListener("DOMContentLoaded", () => {
         });
 
         // Table top
-        let tableDiffuse = textureLoader.load("wood_texture.jpg"); // TODO: Should reuse holderDiffuse, but cloning is not working. Re-loading the texture for now.
+        let tableDiffuse = textureLoader.load("./textures/diffuse/wood_diffuse.jpg"); // TODO: Should reuse holderDiffuse, but cloning is not working. Re-loading the texture for now.
         tableDiffuse.flipY = false;
         tableDiffuse.wrapS = THREE.RepeatWrapping;
         tableDiffuse.wrapT = THREE.RepeatWrapping;
         tableDiffuse.repeat.set( 10, 6 );
-        let tableLightmap = textureLoader.load("table_lightmap.png");
+        let tableLightmap = textureLoader.load("./textures/lightmap/table_lightmap.png");
         tableLightmap.flipY = false;
         objects[14].material = new THREE.MeshLambertMaterial({
             map: tableDiffuse,
@@ -453,14 +452,14 @@ document.addEventListener("DOMContentLoaded", () => {
         });
 
         // Life preserver
-        let lifePreserverDiffuse = textureLoader.load("life_preserver_diffuse.png");
+        let lifePreserverDiffuse = textureLoader.load("./textures/diffuse/life_preserver_diffuse.png");
         lifePreserverDiffuse.flipY = false;
         objects[17].material = new THREE.MeshLambertMaterial({
             map: lifePreserverDiffuse
         })
 
         // Dock Supports
-        let dockSupportDiffuse = textureLoader.load("dock_support_diffuse.jpg");
+        let dockSupportDiffuse = textureLoader.load("./textures/diffuse/dock_support_diffuse.jpg");
         dockSupportDiffuse.flipY = false;
         for (let i = 22; i <= 63; i++) {
             objects[i].material = new THREE.MeshLambertMaterial({
@@ -469,9 +468,9 @@ document.addEventListener("DOMContentLoaded", () => {
         }
 
         // Landscape
-        let landscapeDiffuse = textureLoader.load("landscape_diffuse.jpg");
+        let landscapeDiffuse = textureLoader.load("./textures/diffuse/landscape_diffuse.jpg");
         landscapeDiffuse.flipY = false;
-        let landscapeNormal = textureLoader.load("landscape_normal.jpg");
+        let landscapeNormal = textureLoader.load("./textures/normal/landscape_normal.jpg");
         landscapeNormal.flipY = false;
         objects[64].material = new THREE.MeshPhongMaterial({
             map: landscapeDiffuse,
@@ -479,11 +478,11 @@ document.addEventListener("DOMContentLoaded", () => {
         })
 
         // Plants Back
-        let backGrassDiffuse = textureLoader.load("grass_diffuse.jpg");
+        let backGrassDiffuse = textureLoader.load("./textures/diffuse/grass_diffuse.jpg");
         backGrassDiffuse.flipY = false;
-        let backGrassAlpha = textureLoader.load("grass_alpha.jpg");
+        let backGrassAlpha = textureLoader.load("./textures/alpha/grass_alpha.jpg");
         backGrassAlpha.flipY = false;
-        let backGrassLightmap = textureLoader.load("grass_lightmap.jpg");
+        let backGrassLightmap = textureLoader.load("./textures/lightmap/grass_lightmap.jpg");
         backGrassLightmap.flipY = false;
         let grassUVArr = objects[65].geometry.getAttribute("uv").array;
         objects[65].geometry.setAttribute('uv2', new THREE.BufferAttribute( grassUVArr, 2 ));
@@ -497,11 +496,11 @@ document.addEventListener("DOMContentLoaded", () => {
         objects[65].renderOrder = 3;
 
         // Plants Front
-        let frontGrassDiffuse = textureLoader.load("grass_diffuse.jpg");
+        let frontGrassDiffuse = textureLoader.load("./textures/diffuse/grass_diffuse.jpg");
         frontGrassDiffuse.flipY = false;
-        let frontGrassAlpha = textureLoader.load("grass_alpha.jpg");
+        let frontGrassAlpha = textureLoader.load("./textures/alpha/grass_alpha.jpg");
         frontGrassAlpha.flipY = false;
-        let frontGrassLightmap = textureLoader.load("grass_lightmap.jpg");
+        let frontGrassLightmap = textureLoader.load("./textures/lightmap/grass_lightmap.jpg");
         frontGrassLightmap.flipY = false;
         grassUVArr = objects[66].geometry.getAttribute("uv").array;
         objects[66].geometry.setAttribute('uv2', new THREE.BufferAttribute( grassUVArr, 2 ));
@@ -515,11 +514,11 @@ document.addEventListener("DOMContentLoaded", () => {
         objects[66].renderOrder = 2;
 
         // Tree_1
-        let frontTreeDiffuse = textureLoader.load("tree_diffuse.jpg");
+        let frontTreeDiffuse = textureLoader.load("./textures/diffuse/tree_diffuse.jpg");
         frontTreeDiffuse.flipY = false;
-        let frontTreeAlpha = textureLoader.load("tree_alpha.jpg");
+        let frontTreeAlpha = textureLoader.load("./textures/alpha/tree_alpha.jpg");
         frontTreeAlpha.flipY = false;
-        let frontTreeLightmap = textureLoader.load("tree_lightmap.jpg");
+        let frontTreeLightmap = textureLoader.load("./textures/lightmap/tree_lightmap.jpg");
         frontTreeLightmap.flipY = false;
         let treeUVArr = objects[67].geometry.getAttribute("uv").array;
         objects[67].geometry.setAttribute('uv2', new THREE.BufferAttribute( treeUVArr, 2 ));
@@ -533,11 +532,11 @@ document.addEventListener("DOMContentLoaded", () => {
         objects[67].renderOrder = 1;
 
         // Tree_2
-        let backTreeDiffuse = textureLoader.load("tree2_diffuse.jpg");
+        let backTreeDiffuse = textureLoader.load("./textures/diffuse/tree2_diffuse.jpg");
         backTreeDiffuse.flipY = false;
-        let backTreeAlpha = textureLoader.load("tree2_alpha.jpg");
+        let backTreeAlpha = textureLoader.load("./textures/alpha/tree2_alpha.jpg");
         backTreeAlpha.flipY = false;
-        let backTreeLightmap = textureLoader.load("tree_lightmap.jpg");
+        let backTreeLightmap = textureLoader.load("./textures/lightmap/tree_lightmap.jpg");
         backTreeLightmap.flipY = false;
         treeUVArr = objects[68].geometry.getAttribute("uv").array;
         objects[68].geometry.setAttribute('uv2', new THREE.BufferAttribute( treeUVArr, 2 ));
@@ -551,20 +550,20 @@ document.addEventListener("DOMContentLoaded", () => {
         objects[68].renderOrder = 0;
 
         // Dock
-        let dockDiffuse = textureLoader.load("dock_diffuse.jpg");
+        let dockDiffuse = textureLoader.load("./textures/diffuse/dock_diffuse.jpg");
         dockDiffuse.flipY = false;
         dockDiffuse.wrapS = THREE.RepeatWrapping;
         dockDiffuse.wrapT = THREE.RepeatWrapping;
         dockDiffuse.repeat.set( 12, 6);
         dockDiffuse.anisotropy = renderer.capabilities.getMaxAnisotropy();
-        let dockSpecular = textureLoader.load("dock_specular.png");
+        let dockSpecular = textureLoader.load("./textures/specular/dock_specular.png");
         dockSpecular.flipY = false;
         dockSpecular.wrapS = THREE.RepeatWrapping;
         dockSpecular.wrapT = THREE.RepeatWrapping;
         dockSpecular.repeat.set( 12, 6 );
-        let dockLightmap = textureLoader.load("dock_lightmap.png");
+        let dockLightmap = textureLoader.load("./textures/lightmap/dock_lightmap.png");
         dockLightmap.flipY = false;
-        let dockAOmap = textureLoader.load("dock_ao.png");
+        let dockAOmap = textureLoader.load("./textures/ao/dock_ao.png");
         dockAOmap.flipY = false;
         objects[69].material = new THREE.MeshPhongMaterial({
             map: dockDiffuse,
@@ -579,18 +578,18 @@ document.addEventListener("DOMContentLoaded", () => {
         });
 
         // Distant Island
-        let distantIslandDiffuse = textureLoader.load("distant_island_diffuse.png");
+        let distantIslandDiffuse = textureLoader.load("./textures/diffuse/distant_island_diffuse.png");
         distantIslandDiffuse.flipY = false;
         objects[70].material = new THREE.MeshLambertMaterial({
             map: distantIslandDiffuse
         });
 
         // Distant Trees
-        let distantTreesDiffuse = textureLoader.load("distant_trees_diffuse.jpg");
+        let distantTreesDiffuse = textureLoader.load("./textures/diffuse/distant_trees_diffuse.jpg");
         distantTreesDiffuse.flipY = false;
-        let distantTreesAlpha = textureLoader.load("distant_trees_alpha.jpg");
+        let distantTreesAlpha = textureLoader.load("./textures/alpha/distant_trees_alpha.jpg");
         distantTreesAlpha.flipY = false;
-        let distantTreesLightmap = textureLoader.load("distant_tree_lightmap.jpg");
+        let distantTreesLightmap = textureLoader.load("./textures/lightmap/distant_tree_lightmap.jpg");
         distantTreesLightmap.flipY = false;
         let distantTreesUVArr = objects[71].geometry.getAttribute("uv").array;
         objects[71].geometry.setAttribute('uv2', new THREE.BufferAttribute( distantTreesUVArr, 2 ));
@@ -604,16 +603,16 @@ document.addEventListener("DOMContentLoaded", () => {
         objects[71].renderOrder = 1;
 
         // Lighthouse
-        let lighthouseDiffuse = textureLoader.load("lighthouse_diffuse.png");
+        let lighthouseDiffuse = textureLoader.load("./textures/diffuse/lighthouse_diffuse.png");
         lighthouseDiffuse.flipY = false;
         objects[72].material = new THREE.MeshLambertMaterial({
             map: lighthouseDiffuse
         });
 
         // Map
-        let mapDiffuse = textureLoader.load("map_diffuse.jpg");
+        let mapDiffuse = textureLoader.load("./textures/diffuse/map_diffuse.jpg");
         mapDiffuse.flipY = false;
-        let mapLightmap = textureLoader.load("map_lightmap.png");
+        let mapLightmap = textureLoader.load("./textures/lightmap/map_lightmap.png");
         mapLightmap.flipY = false;
         objects[73].material = new THREE.MeshLambertMaterial({
             map: mapDiffuse,
@@ -627,11 +626,11 @@ document.addEventListener("DOMContentLoaded", () => {
         objects[74].renderOrder = 4;
 
         // Inner Glass (hurricane lantern)
-        let sootDiffuse = textureLoader.load("soot_diffuse.jpg");
+        let sootDiffuse = textureLoader.load("./textures/diffuse/soot_diffuse.jpg");
         sootDiffuse.flipY = false;
-        let sootAlpha = textureLoader.load("soot_alpha.jpg");
+        let sootAlpha = textureLoader.load("./textures/alpha/soot_alpha.jpg");
         sootAlpha.flipY = false;
-        let sootEmissive = textureLoader.load("soot_emissive.jpg");
+        let sootEmissive = textureLoader.load("./textures/emissive/soot_emissive.jpg");
         sootEmissive.flipY = false;
         objects[75].material = new THREE.MeshLambertMaterial({ 
             map: sootDiffuse,
@@ -646,7 +645,7 @@ document.addEventListener("DOMContentLoaded", () => {
         objects[75].renderOrder = 5;
 
         // Base
-        let lanternBaseLightmap = textureLoader.load("lantern_lightmap.jpg");
+        let lanternBaseLightmap = textureLoader.load("./textures/lightmap/lantern_lightmap.jpg");
         lanternBaseLightmap.flipY = false;
         objects[76].material = new THREE.MeshPhongMaterial({
             color: 0x1258f0,
