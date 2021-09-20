@@ -17,6 +17,7 @@ document.addEventListener("DOMContentLoaded", () => {
     const viewSunsetButton = document.getElementById("viewSunset");
     const mapUI = document.getElementById("mapUI");
     const shipWheelElem = document.getElementById("shipWheel");
+    const bodyElem = document.getElementsByTagName("body")[0];
 
     // Three.JS Globals
     const balls = [];
@@ -40,6 +41,7 @@ document.addEventListener("DOMContentLoaded", () => {
     let controls = null;
     let positionDirector = null;
     let lookAtDirector = null;
+    let lastHoveredSkillIsland = null; // Used for navigating to different pages when the user clicks on an island.
 
     // Setup the loading manager such that the loading bar can reflect the total progress of the scene.
     // The onLoad event of the default loading manager fires twice, so we can't rely on that event to signify when everything's loaded.
@@ -169,39 +171,47 @@ document.addEventListener("DOMContentLoaded", () => {
         {
             name: "Programs",
             position: new THREE.Vector3(0.01, 1.93, -1.75),
-            scale: new THREE.Vector2(1, 1)
+            scale: new THREE.Vector2(1, 1),
+            url: "./programs"
         },
         {
             name: "Chrome Extensions",
             position: new THREE.Vector3(0.24, 1.93, -1.8),
-            scale: new THREE.Vector2(1.2, 1.2)
+            scale: new THREE.Vector2(1.2, 1.2),
+            url: "./extensions"
         },
         {
             name: "Graphics",
             position: new THREE.Vector3(0.14, 1.93, -1.52),
-            scale: new THREE.Vector2(1, 1)
+            scale: new THREE.Vector2(1, 1),
+            url: "./graphics"
         },
         {
             name: "Other Skills",
             position: new THREE.Vector3(0.47, 1.93, -1.3),
-            scale: new THREE.Vector2(2.2, 2.2)
+            scale: new THREE.Vector2(2.2, 2.2),
+            url: "./skills"
         },
         {
             name: "Web Components",
             position: new THREE.Vector3(-0.28, 1.93, -2),
-            scale: new THREE.Vector2(2.2, 2)
+            scale: new THREE.Vector2(2.2, 2),
+            url: "./components"
         },
         {
             name: "Games",
             position: new THREE.Vector3(-0.575, 1.93, -1.8),
-            scale: new THREE.Vector2(1.2, 1.2)
+            scale: new THREE.Vector2(1.2, 1.2),
+            url: "./games"
         },
         {
             name: "Websites",
             position: new THREE.Vector3(-0.68, 1.93, -2.16),
-            scale: new THREE.Vector2(2.4, 2.5)
+            scale: new THREE.Vector2(2.4, 2.5),
+            url: "./websites"
         },
     ];
+    lastHoveredSkillIsland = clickablesData[0]; // Set a default skill island just in case the user somehow clicks on the drawn circle before hovering an island.
 
     for (let i = 0; i < 7; i++) {
         clickables[i] = new THREE.Mesh(clickableGeometry, clickableMaterial);
@@ -234,6 +244,15 @@ document.addEventListener("DOMContentLoaded", () => {
     // Add Raycast from mouse
     const raycaster = new THREE.Raycaster();
     const mouse = new THREE.Vector2();
+
+    // Add click events based on raycase
+    bodyElem.addEventListener("click", (e) => {
+        console.log(e);
+        let intersections = getMouseRayIntersections();
+        if ((intersections[0].object.name).toString() == "Drawn Circle") {
+            navigateToLastHoveredSkillIsland();
+        }
+    });
 
     // Clouds (Marching Cubes)
     const cloudResolution = 16;
@@ -749,39 +768,46 @@ document.addEventListener("DOMContentLoaded", () => {
         if (intersections[0] && intersections[0].object.name) {
             switch ((intersections[0].object.name).toString()) {
                 case "Programs":
-                    //console.log("Contributions Hovered");
+                    //console.log("Programs Hovered");
                     drawnCircle.position.set(-0.02, 1.932, -1.75);
                     drawnCircle.scale.set(2.1, 2.1);
+                    lastHoveredSkillIsland = clickablesData[0];
                     break;
                 case "Chrome Extensions":
                     //console.log("Chrome Extensions Hovered");
                     drawnCircle.position.set(0.21, 1.932, -1.79);
                     drawnCircle.scale.set(2, 2);
+                    lastHoveredSkillIsland = clickablesData[1];
                     break;
                 case "Graphics":
-                    //console.log("Eye Candy Hovered");
+                    //console.log("Graphics Hovered");
                     drawnCircle.position.set(0.13, 1.932, -1.51);
                     drawnCircle.scale.set(2, 2);
+                    lastHoveredSkillIsland = clickablesData[2];
                     break;
                 case "Other Skills":
-                    //console.log("Technologies Hovered");
+                    //console.log("Other Skills Hovered");
                     drawnCircle.position.set(0.47, 1.932, -1.33);
                     drawnCircle.scale.set(3, 3);
+                    lastHoveredSkillIsland = clickablesData[3];
                     break;
                 case "Web Components":
-                    //console.log("Duda Widgets Hovered");
+                    //console.log("Web Components Hovered");
                     drawnCircle.position.set(-0.3, 1.932, -1.94);
                     drawnCircle.scale.set(3, 3);
+                    lastHoveredSkillIsland = clickablesData[4];
                     break;
                 case "Games":
                     //console.log("Games Hovered");
                     drawnCircle.position.set(-0.575, 1.932, -1.79);
                     drawnCircle.scale.set(2, 2);
+                    lastHoveredSkillIsland = clickablesData[5];
                     break;
                 case "Websites":
                     //console.log("Websites Hovered");
                     drawnCircle.position.set(-0.66, 1.932, -2.12);
                     drawnCircle.scale.set(4, 4);
+                    lastHoveredSkillIsland = clickablesData[6];
                     break;
                 case "Drawn Circle":
                     //console.log("Drawn Circle Hovered");
@@ -919,6 +945,12 @@ document.addEventListener("DOMContentLoaded", () => {
                 reject(err);
             });
         });
+    }
+
+    // Uses global variable lastHoveredSkillIsland to determine which page to load for the user
+    function navigateToLastHoveredSkillIsland() {
+        console.log(lastHoveredSkillIsland.url);
+        window.location.href = lastHoveredSkillIsland.url;
     }
 
     // Fix blockiness by ensuring the size of the canvas's resolution matches with the canvas's css dimensions.
