@@ -262,8 +262,8 @@ b > .inline_code {
   width: 350px;
   height: 350px;
   background: #ffffff;
-  -webkit-mask-image: url("./6/ship_wheel.svg");
-  mask-image: url("./6/ship_wheel.svg");
+  -webkit-mask-image: url("./6/icons/ship_wheel.svg");
+  mask-image: url("./6/icons/ship_wheel.svg");
   -webkit-mask-size: contain;
   mask-size: contain;
   animation: 6s linear infinite spinner;
