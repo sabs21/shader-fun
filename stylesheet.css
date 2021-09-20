@@ -6,6 +6,58 @@
     width: 100%;
     margin-left: 0em;
   }
+  .selectionText {
+    font-size: 40px;
+  }
+  .selectionText.active {
+    letter-spacing: 16px;
+  }
+  .navButton,
+  .skeletonButton {
+    width: 75px;
+    height: 75px;
+  }
+
+  @keyframes buttonPresence {
+    from {
+      width: 74px;
+      height: 74px;
+      opacity: 0.8;
+    }
+    to {
+      width: 150px;
+      height: 150px;
+      opacity: 0;
+    }
+  }
+  @keyframes bouncy {
+    0% {
+      width: 0px;
+      height: 0px;
+      opacity: 1;
+    }
+    60% {
+      width: 90px;
+      height: 90px;
+      opacity: 1;
+    }
+    80% {
+      width: 60px;
+      height: 60px;
+      opacity: 1;
+    }
+    90% {
+      width: 78px;
+      height: 78px;
+      opacity: 1;
+    }
+    100% {
+      width: 75px;
+      height: 75px;
+      opacity: 1;
+    }
+  }
+  
 }
 /* CSS for width greater than 750px */
 @media (min-width: 750px) { 
@@ -13,6 +65,57 @@
     flex-direction: column;
     align-items: center;
     margin-left: 2em;
+  }
+  .selectionText {
+    font-size: 56px;
+  }
+  .selectionText.active {
+    letter-spacing: 40px;
+  }
+  .navButton,
+  .skeletonButton {
+    width: 100px;
+    height: 100px;
+  }
+
+  @keyframes buttonPresence {
+    from {
+      width: 99px;
+      height: 99px;
+      opacity: 0.8;
+    }
+    to {
+      width: 250px;
+      height: 250px;
+      opacity: 0;
+    }
+  }
+  @keyframes bouncy {
+    0% {
+      width: 0px;
+      height: 0px;
+      opacity: 1;
+    }
+    60% {
+      width: 120px;
+      height: 120px;
+      opacity: 1;
+    }
+    80% {
+      width: 90px;
+      height: 90px;
+      opacity: 1;
+    }
+    90% {
+      width: 104px;
+      height: 104px;
+      opacity: 1;
+    }
+    100% {
+      width: 100px;
+      height: 100px;
+      opacity: 1;
+    }
   }
 }
 :root {
@@ -227,6 +330,28 @@ b > .inline_code {
   height: auto;
   background-color: transparent;
 }
+.welcomeText {
+  position: absolute;
+  display: flex;
+  flex-direction: row;
+  justify-content: center;
+  align-items: center;
+  text-align: center;
+  width: 100%;
+  height: 100%;
+  top: 0px;
+  left: 0px;
+  opacity: 0;
+  font-size: 56px;
+  font-weight: bold;
+  color: white;
+  text-shadow: 0px 0px 6px #000000;
+  transition: opacity 1s ease;
+  pointer-events: none;
+}
+.welcomeText.active {
+  opacity: 1;
+}
 .navButton,
 .skeletonButton {
   position: relative;
@@ -245,8 +370,6 @@ b > .inline_code {
 }
 .navButton {
   opacity: 1;
-  width: 100px;
-  height: 100px;
   background-color: white;
   border: 3px solid rgb(0, 0, 0);
   cursor: pointer;
@@ -256,10 +379,6 @@ b > .inline_code {
 }
 .navButton:hover svg {
   fill: white;
-}
-.navButton:hover ~ .selectionText {
-  opacity: 1;
-  letter-spacing: 40px;
 }
 .navButton:hover ~ .attentionAura {
   animation: 1s ease-in infinite normal running buttonPresence;
@@ -290,7 +409,7 @@ b > .inline_code {
   display: block;
   width: 100%;
   text-align: center;
-  font-size: 56px;
+  /*font-size: 56px;*/
   font-weight: bold;
   color: white;
   margin: 0px auto;
@@ -303,7 +422,7 @@ b > .inline_code {
 }
 .selectionText.active {
   opacity: 1;
-  letter-spacing: 40px;
+  /*letter-spacing: 40px;*/
 }
 .icon {
   position: relative;
@@ -329,19 +448,6 @@ b > .inline_code {
   }
 }
 
-@keyframes buttonPresence {
-  from {
-    width: 99px;
-    height: 99px;
-    opacity: 0.8;
-  }
-  to {
-    width: 250px;
-    height: 250px;
-    opacity: 0;
-  }
-}
-
 @keyframes skeletonButtonPresence {
   from {
     width: 0px;
@@ -352,33 +458,5 @@ b > .inline_code {
     width: 250px;
     height: 250px;
     opacity: 0;
-  }
-}
-
-@keyframes bouncy {
-  0% {
-    width: 0px;
-    height: 0px;
-    opacity: 1;
-  }
-  60% {
-    width: 120px;
-    height: 120px;
-    opacity: 1;
-  }
-  80% {
-    width: 90px;
-    height: 90px;
-    opacity: 1;
-  }
-  90% {
-    width: 104px;
-    height: 104px;
-    opacity: 1;
-  }
-  100% {
-    width: 100px;
-    height: 100px;
-    opacity: 1;
   }
 }

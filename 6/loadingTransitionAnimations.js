@@ -2,6 +2,7 @@
 
 const loadingUI = document.getElementById("loadingUI");
 const shipWheelElem = document.getElementById('shipWheel');
+const welcomeTextElems = document.getElementsByClassName("welcomeText");
 const skeletonAuraAnimationStyle = "animation: 500ms ease-in 1 normal running skeletonButtonPresence; animation-fill-mode: backwards;";
 const auraAnimationStyle = "animation: 500ms ease-in 1 normal running buttonPresence; animation-fill-mode: backwards;";
 const buttonAnimationStyle = "animation: 500ms ease-in 1 normal running bouncy; animation-fill-mode: forwards;";
@@ -38,7 +39,17 @@ let attentionAuras = document.getElementsByClassName("attentionAura");
 shipWheelElem.classList.add("invisible");
 setTimeout(() => {
     shipWheelElem.classList.add("hidden");
-    shipWheelElem.style = "animation: none;"; // Stop the animation so that it's not running in the backgorund.
+    shipWheelElem.style = "animation: none;"; // Stop the animation so that it's not running in the background.
+    // Now that the ship wheel is fully hidden, fade in the welcome text.
+    for (let text of welcomeTextElems) {
+        text.classList.add("active");
+    }
+    setTimeout(() => {
+        // Fade the welcome text out.
+        for (let text of welcomeTextElems) {
+            text.classList.remove("active");
+        }
+    }, 3000);
 }, 600);
 
 // Play the buttonPresence animation on the skeleton buttons on load.
