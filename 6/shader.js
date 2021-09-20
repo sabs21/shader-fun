@@ -167,7 +167,7 @@ document.addEventListener("DOMContentLoaded", () => {
     });
     let clickablesData = [
         {
-            name: "Web Apps",
+            name: "Programs",
             position: new THREE.Vector3(0.01, 1.93, -1.75),
             scale: new THREE.Vector2(1, 1)
         },
@@ -177,7 +177,7 @@ document.addEventListener("DOMContentLoaded", () => {
             scale: new THREE.Vector2(1.2, 1.2)
         },
         {
-            name: "Eye Candy",
+            name: "Graphics",
             position: new THREE.Vector3(0.14, 1.93, -1.52),
             scale: new THREE.Vector2(1, 1)
         },
@@ -187,7 +187,7 @@ document.addEventListener("DOMContentLoaded", () => {
             scale: new THREE.Vector2(2.2, 2.2)
         },
         {
-            name: "Duda Widgets",
+            name: "Web Components",
             position: new THREE.Vector3(-0.28, 1.93, -2),
             scale: new THREE.Vector2(2.2, 2)
         },
@@ -749,7 +749,7 @@ document.addEventListener("DOMContentLoaded", () => {
         let intersections = getMouseRayIntersections();
         if (intersections[0] && intersections[0].object.name) {
             switch ((intersections[0].object.name).toString()) {
-                case "Web Apps":
+                case "Programs":
                     //console.log("Contributions Hovered");
                     drawnCircle.position.set(-0.02, 1.932, -1.75);
                     drawnCircle.scale.set(2.1, 2.1);
@@ -759,7 +759,7 @@ document.addEventListener("DOMContentLoaded", () => {
                     drawnCircle.position.set(0.21, 1.932, -1.79);
                     drawnCircle.scale.set(2, 2);
                     break;
-                case "Eye Candy":
+                case "Graphics":
                     //console.log("Eye Candy Hovered");
                     drawnCircle.position.set(0.13, 1.932, -1.51);
                     drawnCircle.scale.set(2, 2);
@@ -769,7 +769,7 @@ document.addEventListener("DOMContentLoaded", () => {
                     drawnCircle.position.set(0.47, 1.932, -1.33);
                     drawnCircle.scale.set(3, 3);
                     break;
-                case "Duda Widgets":
+                case "Web Components":
                     //console.log("Duda Widgets Hovered");
                     drawnCircle.position.set(-0.3, 1.932, -1.94);
                     drawnCircle.scale.set(3, 3);
